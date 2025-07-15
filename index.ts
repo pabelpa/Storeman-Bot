@@ -47,7 +47,7 @@ import spremovefac from "./Commands/spremovefac";
 
 require("dotenv").config();
 const host = process.env.APP_HOST ? process.env.APP_HOST : "0.0.0.0";
-const currentVersion = 22;
+const currentVersion = 23;
 const commandMapping: any = {
   sphelp: { sub: false, vars: 1, handler: sphelp },
   spcode: {
