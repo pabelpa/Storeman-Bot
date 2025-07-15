@@ -33,8 +33,8 @@ const spremoveprettyname = async (interaction: ChatInputCommandInteraction, clie
 
             await interaction.editReply({ content: "Removed the pretty name from `" + stockpileExist.name + "` successfully." })
 
-            const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-            await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+            const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+            await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
 
         }
         else {

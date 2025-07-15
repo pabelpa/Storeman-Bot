@@ -31,8 +31,8 @@ const spremovetarget = async (interaction: ChatInputCommandInteraction, client: 
         });
     }
 
-    const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+    const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+        await updateStockpileMsg(client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
     
     await interaction.editReply({
         content: "Item `" + item + "` has been removed from the target list."

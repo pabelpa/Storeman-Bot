@@ -36,8 +36,8 @@ const sprefresh = async (interaction: ChatInputCommandInteraction): Promise<bool
 
             const timerBP: any = NodeCacheObj.get("timerBP")
             stockpileTimes[cleanName] = { timeLeft: newTimeLeft, timeNotificationLeft: timerBP.length - 1 }
-            const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-            await updateStockpileMsg(interaction.client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+            const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+            await updateStockpileMsg(interaction.client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
             checkTimeNotifs(interaction.client, true, false, interaction.guildId!)
         }
         else {
@@ -58,8 +58,8 @@ const sprefresh = async (interaction: ChatInputCommandInteraction): Promise<bool
             stockpileTimes[doc.name] = { timeLeft: newTimeLeft, timeNotificationLeft: timerBP.length - 1 }
         })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(interaction.client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+        await updateStockpileMsg(interaction.client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
         checkTimeNotifs(interaction.client, true, false, interaction.guildId!)
         await interaction.editReply("Updated the timers of all your stockpiles.")
     }

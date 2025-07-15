@@ -164,8 +164,8 @@ const stockpilerUpdateStockpile = async (client: Client, body: any, response: ht
                 }
 
                 const guildID = process.env.STOCKPILER_MULTI_SERVER === "true" ? body.guildID : "GUILD_ID_PLACEHOLDER"
-                const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, guildID)
-                updateStockpileMsg(client, guildID, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+                const [stockpileHeader, stockpileMsgs, targetMsg, facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, guildID)
+                updateStockpileMsg(client, guildID, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
 
 
             }

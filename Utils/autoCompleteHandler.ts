@@ -35,6 +35,22 @@ const spStockpileComplete = async (interaction: AutocompleteInteraction, collect
     await interaction.respond(filtered);
 }
 
+const spFacComplete = async (interaction: AutocompleteInteraction, collections: any) => {
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+
+    const allFacs = await collections.facilities.find({}).toArray();
+
+    const filtered: Array<ApplicationCommandOptionChoiceData> = []
+    for (let i = 0; i < allFacs.length; i++) {
+        if (allFacs[i].name.toLowerCase().indexOf(focusedValue) !== -1) {
+            filtered.push({ name: allFacs[i].name, value: allFacs[i].name })
+        }
+
+        if (filtered.length >= 25) break
+    }
+    await interaction.respond(filtered);
+}
+
 const spGroupComplete = async (interaction: AutocompleteInteraction, collections: any) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();
 
@@ -62,7 +78,11 @@ const commands: any = {
     'sprefresh': { 'stockpile': spStockpileComplete },
     'spsettimeleft': { 'stockpile': spStockpileComplete },
     'spsetamount': { 'stockpile': spStockpileComplete },
-    'spgroup': { 'name': spGroupComplete, 'stockpile_name': spStockpileComplete }
+    'spgroup': { 'name': spGroupComplete, 'stockpile_name': spStockpileComplete },
+    'spsetmsupp':{'name': spFacComplete,},
+    'spmsuppcons':{'name': spFacComplete,},
+    'spremovefac':{'name': spFacComplete,}
+
 }
 
 const autoCompleteHandler = async (interaction: AutocompleteInteraction) => {

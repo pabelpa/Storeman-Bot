@@ -38,8 +38,8 @@ const spaddcode = async (interaction: ChatInputCommandInteraction, client: Clien
         }
         await interaction.editReply({ content: "Added the code `" + cleanedCode + "` to stockpile `" + stockpileExist.name + "` successfully." })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+        const [stockpileHeader, stockpileMsgs, targetMsg, facilitiesmsgs, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, facilitiesmsgs, stockpileMsgsHeader, refreshAll])
     }
 
 

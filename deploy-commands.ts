@@ -270,7 +270,19 @@ const commands = [
                 .setDescription("Removes the target <item> from stockpile group with <name>")
                 .addStringOption(option => option.setName("name").setDescription("The name of the stockpile group to remove from").setRequired(true).setAutocomplete(true))
                 .addStringOption(option => option.setName("item").setDescription("The name of the item to remove from targets").setRequired(true))
-        )
+        ),
+    new SlashCommandBuilder().setName('spaddfacility').setDescription('Adds a location that consumes msupps')
+        .addStringOption((option) => option.setName("name").setDescription("The name of the facility").setRequired(true))
+        .addIntegerOption((option) => option.setName("msupp").setDescription("The number of msupps this location consumes per hour").setRequired(true))
+        .addIntegerOption((option) => option.setName("msupplevel").setDescription("The current number of msupps").setRequired(true)),
+    new SlashCommandBuilder().setName('spsetmsupp').setDescription('sets the number of msupps supplying a facility')
+        .addStringOption((option) => option.setName("name").setDescription("The name of the facility").setRequired(true).setAutocomplete(true))
+        .addIntegerOption((option) => option.setName("msupp").setDescription("The number of msupps this location has").setRequired(true)),
+    new SlashCommandBuilder().setName('spmsuppcons').setDescription('sets the number of msupps a facility consumes')
+        .addStringOption((option) => option.setName("name").setDescription("The name of the facility").setRequired(true).setAutocomplete(true))
+        .addIntegerOption((option) => option.setName("msupp").setDescription("The number of msupps this location consumes per hour").setRequired(true)),
+    new SlashCommandBuilder().setName('spremovefac').setDescription('removes a facility from the msupp tracker')
+        .addStringOption((option) => option.setName("name").setDescription("name of the facility").setRequired(true).setAutocomplete(true))
 ].map(command => command.toJSON())
 
 

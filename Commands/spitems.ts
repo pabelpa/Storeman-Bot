@@ -20,7 +20,7 @@ const spitems = async (interaction: ChatInputCommandInteraction): Promise<boolea
 - The Hangman 757wdddddddddd
 - 0.44
 - Sampo Auto-Rifle 77
-- Argentir r.II Rifle
+- Argenti r.II Rifle
 - Volta r.I Repeater
 - Fuscina pi.I
 - Blakerow 871

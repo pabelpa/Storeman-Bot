@@ -45,8 +45,8 @@ const spgroup = async (interaction: ChatInputCommandInteraction, client: Client)
 
         await interaction.editReply({ content: "Created the stockpile group `" + name + "` successfully." })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+        const [stockpileHeader, stockpileMsgs, targetMsg, facMsg,stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
 
     }
     else if (interaction.options.getSubcommand() === 'remove') {
@@ -65,8 +65,8 @@ const spgroup = async (interaction: ChatInputCommandInteraction, client: Client)
 
         await interaction.editReply({ content: "Removed the stockpile group `" + name + "` successfully." })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
 
     }
     else if (interaction.options.getSubcommand() === 'addstockpile') {
@@ -100,8 +100,8 @@ const spgroup = async (interaction: ChatInputCommandInteraction, client: Client)
 
             await interaction.editReply({ content: "Stockpile `" + stockpileName + "` has been added successfully to the `" + name + "` stockpile group." })
 
-            const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-            await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+            const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+            await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
 
         }
         else {
@@ -128,8 +128,8 @@ const spgroup = async (interaction: ChatInputCommandInteraction, client: Client)
 
                 await interaction.editReply({ content: "Stockpile `" + stockpileName + "` has been removed successfully from the `" + name + "` stockpile group." })
 
-                const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-                await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+                const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+                await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
             }
             else {
                 await interaction.editReply({ content: "Stockpile `" + stockpileName + "` does not exist in the `" + name + "` stockpile group." })
@@ -194,8 +194,8 @@ const spgroup = async (interaction: ChatInputCommandInteraction, client: Client)
                     content: `Item \`${lowerToOriginal[cleanitem]}\` has been added with a target of minimum ${minimum_amount} crates and maximum ${maximum_amount !== 0 ? maximum_amount : "unlimited"} crates.`
                 });
 
-                const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-                await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+                const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+                await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
 
             }
 
@@ -228,8 +228,8 @@ const spgroup = async (interaction: ChatInputCommandInteraction, client: Client)
                     content: "Item `" + lowerToOriginal[cleanitem] + "` has been removed from the target list of " + name + " stockpile group."
                 });
 
-                const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-                await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+                const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+                await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
             }
         }
         else {

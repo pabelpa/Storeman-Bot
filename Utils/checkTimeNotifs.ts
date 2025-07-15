@@ -50,7 +50,7 @@ const checkTimeNotifs = async (client: Client, forceEdit: boolean = false, regul
                 let edited = false
                 const stockpileTimesObj: any = NodeCacheObj.get("stockpileTimes")
                 const stockpileTimes = stockpileTimesObj[globalConfigObj.serverIDList[i]]
-                const timerBP = <Number[]>NodeCacheObj.get("timerBP")
+                const timerBP = <number[]>NodeCacheObj.get("timerBP")
                 const prettyNameObj: any = NodeCacheObj.get("prettyName")
                 const prettyName = prettyNameObj[globalConfigObj.serverIDList[i]]
 
@@ -119,7 +119,7 @@ const checkTimeNotifs = async (client: Client, forceEdit: boolean = false, regul
             let edited = false
             const stockpileTimesObj: any = NodeCacheObj.get("stockpileTimes")
             const stockpileTimes = stockpileTimesObj[guildID]
-            const timerBP = <Number[]>NodeCacheObj.get("timerBP")
+            const timerBP = <number[]>NodeCacheObj.get("timerBP")
             const prettyNameObj: any = NodeCacheObj.get("prettyName")
             const prettyName = prettyNameObj[guildID]
 
@@ -188,16 +188,17 @@ const checkTimeNotifs = async (client: Client, forceEdit: boolean = false, regul
         console.log(eventName + "Checking time now")
         let edited = false
         const stockpileTimes: any = NodeCacheObj.get("stockpileTimes")
-        const timerBP = <Number[]>NodeCacheObj.get("timerBP")
+        const msuppsLeft: any = NodeCacheObj.get("msuppsLeft")
+        const timerBP = <number[]>NodeCacheObj.get("timerBP")
         const prettyName: any = NodeCacheObj.get("prettyName")
         const collections = getCollections()
         let warningMsg = `**Stockpile Expiry Warning**\nThe following stockpiles are about to expire, please kindly refresh them.\n\n`
-
+        
         if (forceEdit) edited = true
         for (const stockpileName in stockpileTimes) {
             const timeLeftProperty: any = stockpileTimes[stockpileName].timeLeft
             const currentDate: any = new Date()
-
+            
             if (stockpileTimes[stockpileName].timeNotificationLeft >= 0) {
                 const currentTimeDiff = (timeLeftProperty - currentDate) / 1000
                 if (currentTimeDiff <= timerBP[stockpileTimes[stockpileName].timeNotificationLeft]) {
@@ -207,6 +208,23 @@ const checkTimeNotifs = async (client: Client, forceEdit: boolean = false, regul
                     edited = true
                     warningMsg += `- \`${stockpileName in prettyName ? prettyName[stockpileName] : stockpileName}\` expires in <t:${Math.floor(timeLeftProperty.getTime() / 1000)}:R> ${stockpileName in prettyName ? "[a.k.a " + prettyName[stockpileName] + "]" : ""}\n`
                     stockpileTimes[stockpileName].timeNotificationLeft = newIndex // Set the stockpile to the next lowest boundry
+                }
+            }
+        }
+        
+        warningMsg += `**Msupp Expiry Warning**\nThe following facilities are about to run out of msupps, please kindly add more to them.\n\n`
+        for (const fac in msuppsLeft){
+            const expireTime: any = msuppsLeft[fac].timeLeft
+            const currentDate: any = new Date()
+            if (msuppsLeft[fac].timeNotificationLeft >= 0) {
+                const currentTimeDiff = (expireTime - currentDate) / 1000
+                if (currentTimeDiff <= timerBP[msuppsLeft[fac].timeNotificationLeft]) {
+                    console.log(eventName + "A facility has passed a set time left and is about to expire. Sending out warning.")
+                    // Detected a stockpile that has past the allocated boundary expiry time
+                    let newIndex = msuppsLeft[fac].timeNotificationLeft - 1
+                    edited = true
+                    warningMsg += `- \`${fac}\` will run out of msupps <t:${Math.floor(expireTime / 1000)}:R>\n`
+                    msuppsLeft[fac].timeNotificationLeft = newIndex // Set the stockpile to the next lowest boundry
                 }
             }
         }

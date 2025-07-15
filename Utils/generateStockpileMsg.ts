@@ -18,6 +18,7 @@ const generateMsg = async (updateMsg: boolean, guildID: string | null): Promise<
     let stockpileMsgsHeader = "**__Stockpiles__** \n\n ----------"
     let stockpileMsgs = NodeCacheObj.get("stockpileMsgs") as Array<string | any[]>
     let targetMsgs = NodeCacheObj.get("targetMsgs") as Array<string>
+    let facilitiesmsgs = NodeCacheObj.get("facMsg") as Array<string>
     let code: any = {}
     let stockpileLocations: any = {}
     const refreshAll = new ActionRowBuilder<ButtonBuilder>()
@@ -31,6 +32,7 @@ const generateMsg = async (updateMsg: boolean, guildID: string | null): Promise<
 
     if (process.env.STOCKPILER_MULTI_SERVER === "true" || updateMsg || !stockpileMsgs || !targetMsgs) {
         const targets = await collections.targets.findOne({})
+        const facilities = await collections.facilities.find({}).toArray()
         const stockpilesList = await collections.stockpiles.find({}).toArray()
         const configObj = (await collections.config.findOne({}))!
      
@@ -238,11 +240,36 @@ const generateMsg = async (updateMsg: boolean, guildID: string | null): Promise<
         }
         targetMsg += "\n"
 
-        NodeCacheObj.set("stockpileMsgs", stockpileMsgs)
-        NodeCacheObj.set("targetMsgs", targetMsgs)
+        facilitiesmsgs = []
+        let facilitesmsg = "**__Facility Msupp__** \n\n"
+        if (facilities) {
+            for (let i = 0; i < facilities.length; i++) {
+                let fac:any = facilities[i]
+                if (fac.timeLeft==""){
+                    facilitesmsg+=`**${fac.name}** (set msupp level with \`spsetmsupp\` to get expiry time)\n`
+                } else {
+                    facilitesmsg+=`**${fac.name}** (last updated: <t:${Math.floor(fac.lastUpdated.getTime() / 1000)}:R>) [no msupps <t:${Math.floor(fac.timeLeft.getTime() / 1000)}:R>] \n`
+                }
+            }
+            
+            while (facilitesmsg.length > 2000) {
+                
+                const sliced = facilitesmsg.slice(0, 2000)
+                const lastEnd = sliced.lastIndexOf("\n")
+                const finalMsg = sliced.slice(0, lastEnd)
+                
+                facilitiesmsgs.push(finalMsg)
+                facilitesmsg = facilitesmsg.slice(lastEnd, facilitesmsg.length)
+            }
+            facilitiesmsgs.push(facilitesmsg)
+        }
+        facilitesmsg += "\n"
     }
 
-    return [stockpileHeader, stockpileMsgs, targetMsgs, stockpileMsgsHeader, refreshAll]
+        NodeCacheObj.set("facMsg", facilitiesmsgs)
+        NodeCacheObj.set("stockpileMsgs", stockpileMsgs)
+        NodeCacheObj.set("targetMsgs", targetMsgs)
+    return [stockpileHeader, stockpileMsgs, targetMsgs, facilitiesmsgs, stockpileMsgsHeader, refreshAll]
 }
 
 

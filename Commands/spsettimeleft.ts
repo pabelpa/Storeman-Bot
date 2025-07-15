@@ -59,8 +59,8 @@ const spsettimeleft = async (interaction: ChatInputCommandInteraction, client: C
         }
         stockpileTimes[stockpileExist.name] = { timeLeft: updateObj.timeLeft, timeNotificationLeft: timeNotificationLeft }
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(interaction.client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+        await updateStockpileMsg(interaction.client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
         checkTimeNotifs(client, true, false, interaction.guildId!)
     }
     else await interaction.editReply({ content: "Error, the stockpile `" + stockpile + "` does not exist." })

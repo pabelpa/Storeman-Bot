@@ -58,6 +58,15 @@ const spsetlogichannel = async (interaction: ChatInputCommandInteraction, client
                     console.log("Failed to delete target msg")
                 }
             }
+            for (let i = 0; i < configDoc.facMsg.length; i++) {
+                try {
+                    const targetMsgObj = await newChannelObj.messages.fetch(configDoc.facMsg[i])
+                    if (targetMsgObj) await targetMsgObj.delete()
+                }
+                catch (e) {
+                    console.log("Failed to delete fac msg")
+                }
+            }
 
             try {
                 const refreshAllID = await newChannelObj.messages.fetch(configDoc.refreshAllID)
@@ -67,7 +76,7 @@ const spsetlogichannel = async (interaction: ChatInputCommandInteraction, client
                 console.log("Failed to delete refreshAll msg")
             }
         }
-        const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateMsg(false, interaction.guildId)
+        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateMsg(false, interaction.guildId)
         const newMsg = await channelObj.send(stockpileHeader)
         const stockpileMsgsHeaderID = await channelObj.send(stockpileMsgsHeader)
         let stockpileMsgIDs: any = []
@@ -95,8 +104,14 @@ const spsetlogichannel = async (interaction: ChatInputCommandInteraction, client
             const targetMsgID = await channelObj.send(targetMsg[i])
             targetMsgIDs.push(targetMsgID.id)
         }
+        let facMsgIds: String[] = []
+        for (let i = 0; i < facMsg.length; i++) {
+            console.log(facMsg[i])
+            const facMsgId = await channelObj.send(facMsg[i])
+            facMsgIds.push(facMsgId.id)
+        }
 
-        await collections.config.updateOne({}, { $set: { stockpileHeader: newMsg.id, stockpileMsgs: stockpileMsgIDs, targetMsg: targetMsgIDs, channelId: channel.id, stockpileMsgsHeader: stockpileMsgsHeaderID.id, refreshAllID: refreshAllID.id } })
+        await collections.config.updateOne({}, { $set: { stockpileHeader: newMsg.id, stockpileMsgs: stockpileMsgIDs, targetMsg: targetMsgIDs,facMsg:facMsgIds, channelId: channel.id, stockpileMsgsHeader: stockpileMsgsHeaderID.id, refreshAllID: refreshAllID.id } })
 
 
         await interaction.editReply({

@@ -16,7 +16,7 @@ const spscan = async (interaction: ChatInputCommandInteraction, client: Client):
     let file = fs.createWriteStream(fileName);
 
     let request = https.get(scannedImage.attachment.proxyURL, (response) => {
-        response.pipe(file);
+        // response.pipe(file);
         file.on('finish', async () => {
             file.close();  // close() is async, call cb after close completes.
             await interaction.editReply({ content: 'File Uploaded' });

@@ -25,7 +25,7 @@ const open = async (): Promise<boolean> => {
     return status
 }
 
-const getDB = () => {
+let getDB = () => {
     return db
 }
 
@@ -39,7 +39,8 @@ const getCollections = (serverID?: any) => {
         const collections = {
             stockpiles: db.collection('stockpiles'),
             targets: db.collection('targets'),
-            config: db.collection('config')
+            config: db.collection('config'),
+            facilities:db.collection('facilities')
         }
         return collections
     }
@@ -48,7 +49,8 @@ const getCollections = (serverID?: any) => {
         const collections = {
             stockpiles: db.collection('stockpiles'),
             targets: db.collection('targets'),
-            config: db.collection('config')
+            config: db.collection('config'),
+            facilities:db.collection('facilities')
         }
         return collections
     } 

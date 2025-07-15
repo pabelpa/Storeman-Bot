@@ -44,8 +44,8 @@ const spaddloc = async (interaction: ChatInputCommandInteraction, client: Client
         }
         await interaction.editReply({ content: "Added the location `" + locationMappings[cleanedLocation] + "` to stockpile `" + stockpileExist.name + "` successfully." })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+        const [stockpileHeader, stockpileMsgs, targetMsg, facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, facMsg,stockpileMsgsHeader, refreshAll])
     }
 
 

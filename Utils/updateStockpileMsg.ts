@@ -5,9 +5,10 @@ let queue: Array<any> = []
 let multiServerQueue: any = {}
 let editedMsgs = false
 let newMsgsSent = false
+let newtargetMsgSent = false
 const eventName = "[Update Logi Channel]: "
 
-const updateStockpileMsgEntryPoint = async (client: Client, guildID: string | null, msg: [string, Array<string>, string, string, ActionRowBuilder]): Promise<Boolean> => {
+const updateStockpileMsgEntryPoint = async (client: Client, guildID: string | null, msg: [string, Array<string>, Array<string>, Array<string>, string, ActionRowBuilder]): Promise<Boolean> => {
     if (process.env.STOCKPILER_MULTI_SERVER === "true") {
 
 
@@ -85,6 +86,28 @@ const newStockpileMsg = async (currentMsg: string | [string, ActionRowBuilder<Bu
     return true
 }
 
+const newFacMsg = async (currentMsg: string | [string, ActionRowBuilder<ButtonBuilder>], configObj: any, channelObj: TextChannel): Promise<Boolean> => {
+
+    try {
+        // The issue here is that when adding a new stockpile, a new msg has to be sent
+        // Unfortunately, it takes a long time to send that new msg, hence when 2 requests to add the same new stockpile happen
+        // The 1st request wouldn't have updated the database that a new msg has already been sent, leading to another new msg being sent
+        // and the 2nd request's configObj.stockpileMsgs overrides the 1st one
+        let newMsg: any;
+        if (typeof currentMsg !== "string") newMsg = await channelObj.send({ content: currentMsg[0], components: [currentMsg[1]] })
+        else newMsg = await channelObj.send(currentMsg)
+        configObj.facMsg.push(newMsg.id)
+        if (!editedMsgs) editedMsgs = true
+        newMsgsSent = true
+
+    }
+    catch (e) {
+        console.log(e)
+        console.log(eventName + "Failed to send a stockpile msg, skipping...")
+    }
+    return true
+}
+
 const editTargetMsg = async (currentMsg: string, msgObj: Message) => {
     try {
         await msgObj.edit(currentMsg)
@@ -99,6 +122,7 @@ const newTargetMsg = async (currentMsg: string, channelObj: TextChannel, configO
     const newMsg = await channelObj.send(currentMsg)
     configObj.targetMsg.push(newMsg.id)
     if (!editedMsgs) editedMsgs = true
+    newtargetMsgSent=true
 }
 
 const deleteTargetMsg = async (channelObj: TextChannel, currentMsgID: string) => {
@@ -114,7 +138,8 @@ const deleteTargetMsg = async (channelObj: TextChannel, currentMsgID: string) =>
 
 
 
-const updateStockpileMsg = async (client: Client, guildID: string | null, msg: [string, Array<string>, Array<string>, string, ActionRowBuilder<ButtonBuilder>]): Promise<Boolean> => {
+
+const updateStockpileMsg = async (client: Client, guildID: string | null, msg: [string, Array<string>, Array<string>, Array<string>, string, ActionRowBuilder<ButtonBuilder>]): Promise<Boolean> => {
     let channelObj = null
     try {
         const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(guildID) : getCollections()
@@ -138,12 +163,12 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, msg: [
             }
             try {
                 msgObj = await channelObj.messages.fetch(configObj.stockpileMsgsHeader)
-                await msgObj.edit(msg[3])
+                await msgObj.edit(msg[4])
             }
             catch (e: any) {
                 if (e.code === 10008) {
                     console.log(eventName + "Stockpile msgs header msg not found, sending a new one")
-                    const newMsg = await channelObj.send(msg[3])
+                    const newMsg = await channelObj.send(msg[4])
                     await collections.config.updateOne({}, { $set: { stockpileMsgsHeader: newMsg.id } })
                 }
             }
@@ -207,6 +232,8 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, msg: [
                 }
             }
 
+            
+
             let updateObj: any = {}
 
             // Send the refresh all stockpiles and target msg last
@@ -219,7 +246,7 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, msg: [
                     console.log("Failed to delete new refresh all button")
                 }
                 try {
-                    const refreshAllID = await channelObj.send({ content: "----------\nRefresh the timer of **all stockpiles**", components: [msg[4]] })
+                    const refreshAllID = await channelObj.send({ content: "----------\nRefresh the timer of **all stockpiles**", components: [msg[5]] })
                     updateObj.refreshAllID = refreshAllID.id
 
                 } catch (e) {
@@ -254,13 +281,14 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, msg: [
                 try {
                     // edit refreshAllID in case the button was pressed
                     const refreshAllMsg = await channelObj.messages.fetch(configObj.refreshAllID)
-                    await refreshAllMsg.edit({ content: "----------\nRefresh the timer of **all stockpiles**", components: [msg[4]] })
+                    await refreshAllMsg.edit({ content: "----------\nRefresh the timer of **all stockpiles**", components: [msg[5]] })
                 }
                 catch (e: any) {
                     if (e.code === 10008) {
                         editedMsgs = true
+                        newtargetMsgSent = true
                         console.log(eventName + "Refresh stockpile button not found, sending a new 1")
-                        const newMsg = await channelObj.send({ content: "----------\nRefresh the timer of **all stockpiles**", components: [msg[4]] })
+                        const newMsg = await channelObj.send({ content: "----------\nRefresh the timer of **all stockpiles**", components: [msg[5]] })
                         await collections.config.updateOne({}, { $set: { refreshAllID: newMsg.id } })
 
                         let targetMsgIDs = []
@@ -316,12 +344,75 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, msg: [
                 updateObj.targetMsg = configObj.targetMsg
             }
 
+
+            // Check if all the fac msgs still exist
+            for (let i = 0; i < configObj.facMsg.length; i++) {
+                try {
+                    await channelObj.messages.fetch(configObj.facMsg[i])
+                }
+                catch (e: any) {
+                    if (e.code === 10008) {
+                        configObj.facMsg.splice(i, 1)
+                        i -= 1
+                        console.log(eventName + "A stockpile msg no longer exists, deleting")
+                        editedMsgs = true
+                    }
+                }
+            }
+            if (newMsgsSent || newtargetMsgSent){
+                
+                let updateFacFuncArray = []
+                let facMsgIDs = []
+                for (let i = 0; i < configObj.facMsg.length; i++) {
+                    updateFacFuncArray.push(deleteTargetMsg(channelObj, configObj.facMsg[i]))
+                }
+                for (let i = 0; i < msg[3].length; i++) {
+                    try {
+                        const targetMsg = await channelObj.send(msg[2][i])
+                        facMsgIDs.push(targetMsg.id)
+                    }
+                    catch (e) {
+                        console.log(eventName + "Failed to send a new facMsg")
+                    }
+                }
+
+                updateObj.facMsg = facMsgIDs
+
+
+                checkTimeNotifsQueue(client, true, false, guildID!)
+
+            } else {
+                let updateFacFuncArray = []
+                for (let i = 0; i < msg[3].length; i++) {
+                    if (i < configObj.facMsg.length) {
+                        msgObj = await channelObj.messages.fetch(configObj.facMsg[i])
+                        updateFacFuncArray.push(editStockpileMsg(msg[3][i], msgObj))
+                    }
+                    else {
+                        updateFacFuncArray.push(newFacMsg(msg[3][i], configObj, channelObj))
+                    }
+                }
+                await Promise.all(updateFacFuncArray)
+    
+                const difference_fac = configObj.facMsg.length - msg[3].length
+                for (let i = 0; i < difference_fac; i++) {
+                    if (!editedMsgs) editedMsgs = true
+                    try {
+                        msgObj = await channelObj.messages.fetch(configObj.facMsg[configObj.facMsg.length - 1])
+                        await msgObj.delete()
+                    }
+                    catch (e) {
+                        console.log(eventName + "Failed to delete an unused facility msg")
+                    }
+                    configObj.facMsg.pop()
+    
+                }
+                updateObj.targetMsg = configObj.targetMsg
+            }
             if (editedMsgs) {
                 updateObj.stockpileMsgs = configObj.stockpileMsgs
                 await collections.config.updateOne({}, { $set: updateObj })
             }
-
-
         }
 
     }

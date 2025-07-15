@@ -40,6 +40,10 @@ import sprefresh from "./Commands/sprefresh";
 import spuser from "./Commands/spuser";
 import autoCompleteHandler from "./Utils/autoCompleteHandler";
 import { UPDATE_DATE, VERSION } from "./constants";
+import spaddfacility from "./Commands/spaddfacility";
+import spsetmsupp from "./Commands/spsetmsupp";
+import spmsuppcons from "./Commands/spmsuppcons";
+import spremovefac from "./Commands/spremovefac";
 
 require("dotenv").config();
 const host = process.env.APP_HOST ? process.env.APP_HOST : "0.0.0.0";
@@ -103,6 +107,10 @@ const commandMapping: any = {
   spsettimeleft: { sub: false, vars: 2, handler: spsettimeleft },
   spgroup: { sub: false, vars: 2, handler: spgroup },
   spuser: { sub: false, vars: 1, handler: spuser },
+  spaddfacility: { sub: false, vars: 2, handler: spaddfacility },
+  spsetmsupp: { sub: false, vars: 1, handler: spsetmsupp },
+  spmsuppcons: { sub: false, vars: 2, handler: spmsuppcons },
+  spremovefac: { sub: false, vars: 2, handler: spremovefac },
 };
 const timerBP = [60 * 5, 60 * 10, 60 * 30, 60 * 60, 60 * 60 * 6, 60 * 60 * 12]; // Timer breakpoints in seconds
 
@@ -360,7 +368,28 @@ const createCacheStartup = async (client: Client) => {
         };
       }
     }
+    const facilites = await collections.facilities.find({}).toArray();
+    let msuppsLeft: any = {};
+    for (let i = 0; i < facilites.length; i++) {
+      if ("timeLeft" in facilites[i]) {
+        let timeNotificationLeft = timerBP.length - 1;
+        for (let x = 0; x < timerBP.length; x++) {
+          const timeLeftProperty: any = facilites[i].timeLeft;
+          const currentDate: any = new Date();
+          if ((timeLeftProperty - currentDate) / 1000 <= timerBP[x]) {
+            timeNotificationLeft = x;
+            break;
+          }
+        }
+        if (timeNotificationLeft >= 1) timeNotificationLeft -= 1;
+        msuppsLeft[facilites[i].name] = {
+          timeLeft: facilites[i].timeLeft,
+          timeNotificationLeft: timeNotificationLeft,
+        };
+      }
+    }
     NodeCacheObj.set("stockpileTimes", stockpileTime);
+    NodeCacheObj.set("msuppsLeft", msuppsLeft);
 
     // Check whether to insert commands and do first-time setup
     if (process.env.NODE_ENV === "development") insertCommands();

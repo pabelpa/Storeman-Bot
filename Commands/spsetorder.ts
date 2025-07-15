@@ -57,8 +57,8 @@ const spsetorder = async (interaction: ChatInputCommandInteraction, client: Clie
     orderSettings.splice(order, 0, temp)
 
     await collections.config.updateOne({}, {$set: {orderSettings: orderSettings}})
-    const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+    const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+        await updateStockpileMsg(client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
         
     await interaction.editReply({
         content: "Order of '" + stockpile + "' stockpile changed to number " + (order+1).toString(),

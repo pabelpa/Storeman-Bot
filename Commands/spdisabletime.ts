@@ -43,8 +43,8 @@ const spdisabletime = async (interaction: ChatInputCommandInteraction, client: C
         content: `Successfully ${disable ? "disabled" : "enabled"} the time-checking feature of Storeman Bot`,
     });
 
-    const [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-    await updateStockpileMsg(interaction.client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, stockpileMsgsHeader, refreshAll])
+    const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
+    await updateStockpileMsg(interaction.client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
     if (!disable) checkTimeNotifs(client, true, false, interaction.guildId!)
 
     return true;
