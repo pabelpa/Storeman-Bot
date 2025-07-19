@@ -77,19 +77,32 @@ const createLogisticsTicket = async (interaction: ChatInputCommandInteraction): 
         id: rl.id, 
         allow: ["ViewChannel"]
     }]
+    let chnl
+    try {
+        chnl = await interaction.guild.channels.create({
+            name: "logi-ticket-" + ticketId,
+            type: ChannelType.GuildText,
+            parent: cat.id,
+            permissionOverwrites: prm
+            // your permission overwrites or other options here
+        });
 
-    const chnl = await interaction.guild.channels.create({
-        name: "logi-ticket-" + ticketId,
-        type: ChannelType.GuildText,
-        parent: cat.id,
-        permissionOverwrites: prm
-        // your permission overwrites or other options here
-    });
-
+    } catch{
+        interaction.editReply("there was an issue creating the logi channel, check to make sure the bot has the correct permissions")
+        return false
+    }
+    
     // const ticketEmbed = createOracleEmbed('Logistics Ticket ' + (interaction.options.getString('logi-type')) +' (' + interaction.options.getString('sub-type') + ') - ' + interaction.options.getString('location'), " ", [], "");
     const ticketEmbed = createOracleEmbed('Logistics Ticket ' + interaction.options.getString('location'), " ", [], "");
-
-    const msg = await chnl.send({embeds: [ticketEmbed]});
+    let msg
+    try {
+        msg = await chnl.send({embeds: [ticketEmbed]});
+        
+    } catch{
+        interaction.editReply("there was an issue sending a message the ticket's channel, check to make sure the bot has the correct permissions")
+        return false
+        
+    }
     const tckt = {
         channelId: chnl.id,
         ticketRoleId: rl.id,
