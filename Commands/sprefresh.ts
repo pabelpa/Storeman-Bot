@@ -45,17 +45,21 @@ const sprefresh = async (interaction: ChatInputCommandInteraction): Promise<bool
         }
     }
     else {
-        await collections.stockpiles.find({}).forEach(async (doc: any) => {
-            const newTimeLeft = new Date((new Date()).getTime() + 60 * 60 * 1000 * 50)
+        await collections.stockpiles.find({}).forEach( (doc: any) => {
+            const runUpdate = async (doc:any)=>{
+                const newTimeLeft = new Date((new Date()).getTime() + 60 * 60 * 1000 * 50)
+    
+                await collections.stockpiles.updateOne({ name: doc.name }, { $set: { timeLeft: newTimeLeft }, $unset: { upperBound: 1 } })
+                const stockpileTimesObj: any = NodeCacheObj.get("stockpileTimes")
+                let stockpileTimes: any;
+                if (process.env.STOCKPILER_MULTI_SERVER === "true") stockpileTimes = stockpileTimesObj[interaction.guildId!]
+                else stockpileTimes = stockpileTimesObj
+    
+                const timerBP: any = NodeCacheObj.get("timerBP")
+                stockpileTimes[doc.name] = { timeLeft: newTimeLeft, timeNotificationLeft: timerBP.length - 1 }
+            }
+            runUpdate(doc)
 
-            await collections.stockpiles.updateOne({ name: doc.name }, { $set: { timeLeft: newTimeLeft }, $unset: { upperBound: 1 } })
-            const stockpileTimesObj: any = NodeCacheObj.get("stockpileTimes")
-            let stockpileTimes: any;
-            if (process.env.STOCKPILER_MULTI_SERVER === "true") stockpileTimes = stockpileTimesObj[interaction.guildId!]
-            else stockpileTimes = stockpileTimesObj
-
-            const timerBP: any = NodeCacheObj.get("timerBP")
-            stockpileTimes[doc.name] = { timeLeft: newTimeLeft, timeNotificationLeft: timerBP.length - 1 }
         })
 
         const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)

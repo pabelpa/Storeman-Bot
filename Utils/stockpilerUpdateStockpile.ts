@@ -55,7 +55,7 @@ const stockpilerUpdateStockpileEntryPoint = async (client: Client, body: any, re
 const stockpilerUpdateStockpile = async (client: Client, body: any, response: http.ServerResponse) => {
     try {
         const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(body.guildID) : getCollections()
-        const password = await collections.config.findOne({}, { projection: { password: 1 } })
+        const password = (await collections.config.findOne({}, { projection: { password: 1 } }))!
         if (process.env.STOCKPILER_MULTI_SERVER === "true" && !password) {
             console.log(eventName + "No GuildID was found with guildID: " + body.guildID)
             response.writeHead(404, { 'Content-Type': 'application/json' })

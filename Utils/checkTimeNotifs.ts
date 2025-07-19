@@ -41,7 +41,7 @@ const checkTimeNotifs = async (client: Client, forceEdit: boolean = false, regul
         if (regularUpdate) {
             const globalCollections = getCollections("global-settings")
             const disableTimeNotif: any = NodeCacheObj.get("disableTimeNotif")
-            const globalConfigObj = await globalCollections.config.findOne({})
+            const globalConfigObj = (await globalCollections.config.findOne({}))!
             for (let i = 0; i < globalConfigObj.serverIDList.length; i++) {
                 // skip this server if it has disabled time-check notifications
                 if (disableTimeNotif[globalConfigObj.serverIDList[i]]) continue

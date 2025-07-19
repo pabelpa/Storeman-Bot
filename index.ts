@@ -61,7 +61,7 @@ import lbComplete from "./Commands/lb-complete";
 
 require("dotenv").config();
 const host = process.env.APP_HOST ? process.env.APP_HOST : "0.0.0.0";
-const currentVersion = 23;
+const currentVersion = 24;
 const commandMapping: any = {
   sphelp: { sub: false, vars: 1, handler: sphelp },
   spcode: {
@@ -218,7 +218,7 @@ const guildDeleteEventHandler = async (guildID: string) => {
   await db.dropDatabase();
 
   const collections = getCollections("global-settings");
-  const configObj = await collections.config.findOne({});
+  const configObj = (await collections.config.findOne({}))!;
   let found = false;
   for (let i = 0; i < configObj.serverIDList.length; i++) {
     if (configObj.serverIDList[i] === guildID) {
@@ -304,7 +304,7 @@ const createCacheStartup = async (client: Client) => {
       for (let i = 0; i < configObj.serverIDList.length; i++) {
         // Create custom notifRoles and prettyNames cache object
         const serverCollections = getCollections(configObj.serverIDList[i]);
-        const serverConfigObj = await serverCollections.config.findOne({});
+        const serverConfigObj = (await serverCollections.config.findOne({}))!;
         if ("notifRoles" in serverConfigObj)
           notifRoles[configObj.serverIDList[i]] = serverConfigObj.notifRoles;
         else notifRoles[configObj.serverIDList[i]] = [];
@@ -561,6 +561,7 @@ const main = async (): Promise<void> => {
   const csvData: Array<any> = await new Promise(function (resolve, reject) {
     let fetchData: any = [];
     fs.createReadStream("ItemNumbering.csv")
+      //@ts-ignore
       .pipe(csv())
       .on("data", (row) => {
         fetchData.push(row);
@@ -602,6 +603,7 @@ const main = async (): Promise<void> => {
   const LocationCSV: Array<any> = await new Promise(function (resolve, reject) {
     let fetchData: any = [];
     fs.createReadStream("Locs.csv")
+      //@ts-ignore
       .pipe(csv())
       .on("data", (row) => {
         fetchData.push(row);
