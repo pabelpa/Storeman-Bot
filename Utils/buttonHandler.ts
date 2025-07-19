@@ -5,6 +5,7 @@ import checkPermissions from "./checkPermissions";
 import checkTimeNotifs from "./checkTimeNotifs";
 import generateStockpileMsg from "./generateStockpileMsg";
 import updateStockpileMsg from "./updateStockpileMsg";
+import buttonHandlerOracle from "./oracleButtons";
 
 
 
@@ -296,11 +297,14 @@ const commands: any = {
 
 const buttonHandler = async (interaction: ButtonInteraction) => {
     try {
-        const splitted = interaction.customId.split("==")
-        const command = splitted[0]
-        const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
-    
-        commands[command](interaction, collections, splitted)
+        if ((await buttonHandlerOracle(interaction))!){
+            const splitted = interaction.customId.split("==")
+            const command = splitted[0]
+            const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+        
+            commands[command](interaction, collections, splitted)
+
+        }
     }
     catch (e) {
         console.log("Error occured in buttonHandler")

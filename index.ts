@@ -1,4 +1,4 @@
-import { Interaction, Client, Guild, GatewayIntentBits } from "discord.js";
+import { Interaction, Client, Guild, GatewayIntentBits,IntentsBitField } from "discord.js";
 import { insertCommands } from "./deploy-commands";
 import { open, getCollections, getMongoClientObj } from "./mongoDB";
 import sphelp from "./Commands/sphelp";
@@ -44,6 +44,20 @@ import spaddfacility from "./Commands/spaddfacility";
 import spsetmsupp from "./Commands/spsetmsupp";
 import spmsuppcons from "./Commands/spmsuppcons";
 import spremovefac from "./Commands/spremovefac";
+import createLogisticsTicket from "./Commands/create-logistics-ticket";
+import enlist from "./Commands/enlist"
+import setActiveRole from "./Commands/set-active-role"
+import setInactiveRole from "./Commands/set-inactive-role"
+import SetLogiTicketChannel from "./Commands/set-logi-ticket-channel"
+import lbAdd from "./Commands/lb-add";
+import setLogiTicketChannel from "./Commands/set-logi-ticket-channel";
+import messageListener from "./Utils/messageListener"
+import deliver from "./Commands/deliver";
+import lbRemove from "./Commands/lb-remove";
+import lbView from "./Commands/lb-view";
+import lbDiscard from "./Commands/lb-discard";
+import lbComplete from "./Commands/lb-complete";
+
 
 require("dotenv").config();
 const host = process.env.APP_HOST ? process.env.APP_HOST : "0.0.0.0";
@@ -111,6 +125,17 @@ const commandMapping: any = {
   spsetmsupp: { sub: false, vars: 1, handler: spsetmsupp },
   spmsuppcons: { sub: false, vars: 2, handler: spmsuppcons },
   spremovefac: { sub: false, vars: 2, handler: spremovefac },
+  "set-logi-ticket-channel": { sub: false, vars: 1, handler: setLogiTicketChannel },
+  'set-active-role': { sub: false, vars: 1, handler: setActiveRole },
+  'set-inactive-role': { sub: false, vars: 1, handler: setInactiveRole },
+  'enlist': { sub: false, vars: 1, handler: enlist },
+  'create-logistics-ticket': { sub: false, vars: 1, handler: createLogisticsTicket },
+  'lb-add': { sub: false, vars: 1, handler: lbAdd },
+  'deliver': { sub: false, vars: 1, handler: deliver },
+  'lb-remove': { sub: false, vars: 1, handler: lbRemove },
+  'lb-view': { sub: false, vars: 1, handler: lbView },
+  'lb-discard': { sub: false, vars: 1, handler: lbDiscard },
+  'lb-complete': { sub: false, vars: 1, handler: lbComplete },
 };
 const timerBP = [60 * 5, 60 * 10, 60 * 30, 60 * 60, 60 * 60 * 6, 60 * 60 * 12]; // Timer breakpoints in seconds
 
@@ -522,7 +547,16 @@ const main = async (): Promise<void> => {
   };
 
   // Create a new client instance
-  const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+  const client = new Client({ intents: [
+    // GatewayIntentBits.Guilds,
+    IntentsBitField.Flags.Guilds, 
+    IntentsBitField.Flags.GuildMessages, 
+    IntentsBitField.Flags.GuildMembers, 
+    IntentsBitField.Flags.GuildModeration,
+    IntentsBitField.Flags.MessageContent,
+    IntentsBitField.Flags.GuildMessageReactions,
+    IntentsBitField.Flags.GuildMessageTyping,
+    IntentsBitField.Flags.DirectMessages] });
   global.NodeCacheObj = new NodeCache({ checkperiod: 0, useClones: false });
   const csvData: Array<any> = await new Promise(function (resolve, reject) {
     let fetchData: any = [];
@@ -637,6 +671,8 @@ const main = async (): Promise<void> => {
       console.log("Storeman Bot is ready!");
       client.user?.setActivity("/sphelp");
     });
+
+    client.on("messageCreate", messageListener);
 
     client.on("interactionCreate", async (interaction) => {
       if (interaction.isChatInputCommand()) {

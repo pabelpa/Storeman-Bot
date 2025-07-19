@@ -1,7 +1,29 @@
 import { Db, MongoClient} from 'mongodb'
+import { EmptyStatement } from 'typescript';
 let db: Db
 let mongoClientObj: any;
 
+interface Ticket 
+{
+    guildId : string;
+    ticketId: string;
+    channelId: string; 
+    ticketRoleId: string;  
+    author: string;
+    transcript: string[]; 
+    data: number[];
+    newUserTicket: Boolean;
+    logisticsTypes: string[];
+    location: string;
+    demanded: number[];
+    delivered: number[];
+    notes: string;
+    complete: Boolean;
+    ticketPostEmbed: string;
+    ticketPostChannel: string;
+    updateEmbed: string;
+    closed : Boolean;
+}
 
 const open = async (): Promise<boolean> => {
     let uri = "mongodb://localhost:27017"
@@ -25,32 +47,30 @@ const open = async (): Promise<boolean> => {
     return status
 }
 
-let getDB = () => {
-    return db
-}
-
 const getMongoClientObj = (): MongoClient => {
     return mongoClientObj
 }
 
 const getCollections = (serverID?: any) => {
     if (process.env.STOCKPILER_MULTI_SERVER && process.env.STOCKPILER_MULTI_SERVER === "true") {
-        const db = mongoClientObj.db('stockpiler-' + serverID)
+        const db:Db = mongoClientObj.db('stockpiler-' + serverID)
         const collections = {
             stockpiles: db.collection('stockpiles'),
             targets: db.collection('targets'),
             config: db.collection('config'),
-            facilities:db.collection('facilities')
+            facilities:db.collection('facilities'),
+            tickets:db.collection<Ticket>('tickets')
         }
         return collections
     }
     else {
-        const db = mongoClientObj.db('stockpiler')
+        const db:Db = mongoClientObj.db('stockpiler')
         const collections = {
             stockpiles: db.collection('stockpiles'),
             targets: db.collection('targets'),
             config: db.collection('config'),
-            facilities:db.collection('facilities')
+            facilities:db.collection('facilities'),
+            tickets:db.collection<Ticket>('tickets')
         }
         return collections
     } 
@@ -58,4 +78,4 @@ const getCollections = (serverID?: any) => {
 }
 
 
-export { open, getDB, getCollections, getMongoClientObj }
+export { open, getCollections, getMongoClientObj }

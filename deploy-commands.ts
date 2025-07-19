@@ -282,7 +282,30 @@ const commands = [
         .addStringOption((option) => option.setName("name").setDescription("The name of the facility").setRequired(true).setAutocomplete(true))
         .addIntegerOption((option) => option.setName("msupp").setDescription("The number of msupps this location consumes per hour").setRequired(true)),
     new SlashCommandBuilder().setName('spremovefac').setDescription('removes a facility from the msupp tracker')
-        .addStringOption((option) => option.setName("name").setDescription("name of the facility").setRequired(true).setAutocomplete(true))
+        .addStringOption((option) => option.setName("name").setDescription("name of the facility").setRequired(true).setAutocomplete(true)),
+    new SlashCommandBuilder().setName('set-active-role').setDescription('designates which role is active')
+        .addRoleOption((option) => option.setName("role").setDescription("role associated with active members").setRequired(true)),
+    new SlashCommandBuilder().setName('set-inactive-role').setDescription('designates which role is inactive')
+        .addRoleOption((option) => option.setName("role").setDescription("role associated with inactive members").setRequired(true)),
+    new SlashCommandBuilder().setName('enlist').setDescription('designate yourself as an active member'),
+    new SlashCommandBuilder().setName('set-logi-ticket-channel').setDescription('designate a channel for logi tickets')
+        .addChannelOption((option) => option.setName("channel").setDescription("channel where logi tickets live").setRequired(true)),
+    new SlashCommandBuilder().setName('create-logistics-ticket').setDescription('create new ticket')
+        .addStringOption((option) => option.setName("location").setDescription("location for logi").setRequired(true))
+        .addStringOption((option) => option.setName("notes").setDescription("anything additional")),
+    new SlashCommandBuilder().setName('lb-add').setDescription('add demands to a your logi ticket')
+        .addStringOption((option) => option.setName("resource").setDescription("resource requested").setRequired(true))
+        .addIntegerOption((option) => option.setName("amount").setDescription("number of resource").setRequired(true)),
+    new SlashCommandBuilder().setName('lb-view').setDescription('view the current status of you logi ticket being built'),
+    new SlashCommandBuilder().setName('lb-remove').setDescription('remove demands to a your logi ticket')
+        .addStringOption((option) => option.setName("resource").setDescription("resource requested").setRequired(true))
+        .addIntegerOption((option) => option.setName("amount").setDescription("number of resource")),
+    new SlashCommandBuilder().setName('lb-discard').setDescription('gets rid of your logi ticket being built'),
+    new SlashCommandBuilder().setName('lb-complete').setDescription('finishes the construction of your logi ticket and lets people work on it'),
+    new SlashCommandBuilder().setName('deliver').setDescription('marks contributions to a logi ticket')
+        .addStringOption((option) => option.setName("resource").setDescription("resource requested").setRequired(true))
+        .addIntegerOption((option) => option.setName("amount").setDescription("number of resource").setRequired(true)),
+
 ].map(command => command.toJSON())
 
 
