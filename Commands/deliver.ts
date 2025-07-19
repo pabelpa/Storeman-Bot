@@ -115,7 +115,7 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
                 [] , "");
 
         for (let i = 0; i < users.size; i++) {
-            if (users.at(i)?.roles.cache.some((v) => {return v.id == t.ticketRoleId})) {
+            if (users.at(i)?.roles?.cache?.some((v) => {return v.id == t?.ticketRoleId})) {
                 await users.at(i)?.send({
                     embeds: [
                         transcriptEmbed
