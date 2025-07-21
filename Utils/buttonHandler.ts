@@ -298,6 +298,10 @@ const commands: any = {
 const buttonHandler = async (interaction: ButtonInteraction) => {
     try {
         if ((await buttonHandlerOracle(interaction))!){
+            await interaction.update({
+                content: "Working on it...",
+                components: [],
+            });
             const splitted = interaction.customId.split("==")
             const command = splitted[0]
             const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()

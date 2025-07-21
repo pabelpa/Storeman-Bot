@@ -12,7 +12,7 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
         });
 
         if (!tckt){
-            interaction.editReply({content: '*Error: Invalid Ticket ID*'});
+            interaction.reply({content: '*Error: Invalid Ticket ID*',ephemeral:true});
             return;
         }
 
@@ -26,29 +26,29 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
             return {name: v.toString(), value: tckt.demanded[i].toString()}
         }) as {value: string, name: string}[], "");
 
-        interaction.editReply({embeds: [rplyEmbed]});
+        interaction.reply({embeds: [rplyEmbed],ephemeral:true});
     }else if (interaction.customId == 'enlist_btn' && config){
         const activeRole = config.activeRole;
         const inactiveRole = config.inactiveRole;
 
         if (!activeRole) {
-            interaction.editReply({content: '*Error: Active Role has not been configured*'});
+            interaction.reply({content: '*Error: Active Role has not been configured*',ephemeral:true});
             return;
         }
 
         if (!inactiveRole) {
-            interaction.editReply({content: '*Error: Inactive Role has not been configured*'});
+            interaction.reply({content: '*Error: Inactive Role has not been configured*',ephemeral:true});
             return;
         }
 
         if (!interaction.member) return;
 
         if ((interaction.member.roles as GuildMemberRoleManager).cache.some((v) => {return v.id == activeRole})){
-            interaction.editReply({content: `*You've already enlisted! Get out there and fight*`});
+            interaction.reply({content: `*You've already enlisted! Get out there and fight*`,ephemeral:true});
             return;
         }else{
             (interaction.member.roles as GuildMemberRoleManager).add(activeRole);
-            interaction.editReply({content: '*Successfully signed up for da war '});
+            interaction.reply({content: '*Successfully signed up for da war ',ephemeral:true});
             return;
         }
     }else if (interaction.customId.startsWith("cancel_logi_ticket_") && config){
@@ -59,7 +59,7 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
         })
 
         if (!t){
-            interaction.editReply({content: "*No logistics request started, run **/create-logistics-ticket** to start builder*"})
+            interaction.reply({content: "*No logistics request started, run **/create-logistics-ticket** to start builder*",ephemeral:true})
             return
         }
         
@@ -73,7 +73,7 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
         if (q){
             await q.delete()
         }
-        interaction.editReply({content: "*Current builder discarded, start a new ticket by running the **/create-logistics-ticket** command*"})
+        interaction.reply({content: "*Current builder discarded, start a new ticket by running the **/create-logistics-ticket** command*",ephemeral:true})
     }else if (interaction.customId.startsWith("force_resolve_logi_ticket_") && config){
         if ((interaction.member?.permissions as Readonly<PermissionsBitField>).has("ManageChannels")){
             const t = await Ticket.findOne({
@@ -81,7 +81,7 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
             })
 
             if (!t){
-                interaction.editReply({content: "*Error finding ticket*"})
+                interaction.reply({content: "*Error finding ticket*",ephemeral:true})
                 return
             }
 
@@ -152,28 +152,28 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
                 $set:{closed: true}
             });
         }else{
-            interaction.editReply({content: "*Insufficient permissions - Manage Channel permissions required to force resolve ticket*"})
+            interaction.reply({content: "*Insufficient permissions - Manage Channel permissions required to force resolve ticket*",ephemeral:true})
         }
     }else if (interaction.customId == 'enlist' && config && interaction.member){
         const activeRole = config.activeRole;
         const inactiveRole = config.inactiveRole;
 
         if (!activeRole) {
-            interaction.editReply({content: '*Error: Active Role has not been configured*'});
+            interaction.reply({content: '*Error: Active Role has not been configured*',ephemeral:true});
             return;
         }
 
         if (!inactiveRole) {
-            interaction.editReply({content: '*Error: Inactive Role has not been configured*'});
+            interaction.reply({content: '*Error: Inactive Role has not been configured*',ephemeral:true});
             return;
         }
 
         if ((interaction.member.roles as GuildMemberRoleManager).cache.some((v) => {return v.id == activeRole})){
-            interaction.editReply({content: `*You've already enlisted! Get out there and fight*`});
+            interaction.reply({content: `*You've already enlisted! Get out there and fight*`,ephemeral:true});
             return;
         }else{
             (interaction.member.roles as GuildMemberRoleManager).add(activeRole);
-            interaction.editReply({content: '*Successfully signed up for war ' + (config.currentWar) +' *'});
+            interaction.reply({content: '*Successfully signed up for war ' + (config.currentWar) +' *',ephemeral:true});
             return;
         }
     }else if (interaction.customId.startsWith('reset_reminder_') && config && interaction.member){
@@ -181,7 +181,7 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
         
         const reminderIndex = config.activityReminderIds?.indexOf(interaction.customId.substring(15, interaction.customId.length));
         if (reminderIndex == -1 || !reminderIndex || !config.activityReminderRoles) {
-            interaction.editReply({content: "Error finding reminder"})
+            interaction.reply({content: "Error finding reminder",ephemeral:true})
             return
         };
 
@@ -200,7 +200,7 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
             let d = config.activityReminderIds;
 
             if (!z || !d || !q || !m || !v || !e) {
-                interaction.editReply({content: "Error verifying reminder information"})
+                interaction.reply({content: "Error verifying reminder information",ephemeral:true})
                 return
             }
 
@@ -233,7 +233,7 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
                 }] : []
             })
 
-            interaction.editReply({content: "**Timer Reset** by <@" + interaction.user.id + ">"})
+            interaction.reply({content: "**Timer Reset** by <@" + interaction.user.id + ">",ephemeral:true})
 
             await config.updateOne({},{$set:{
                 activityReminderRolesTimeLimit: z,
@@ -244,9 +244,9 @@ const buttonHandlerOracle = async (interaction: ButtonInteraction) => {
             }})
         }else{
             if (!rl){
-                interaction.editReply({content: "Invalid role selected for reminder"})
+                interaction.reply({content: "Invalid role selected for reminder",ephemeral:true})
             }else{
-                interaction.editReply({content: "You must have the mentioned role in order to reset the timer"})
+                interaction.reply({content: "You must have the mentioned role in order to reset the timer",ephemeral:true})
             }
             
         }
