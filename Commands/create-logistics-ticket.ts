@@ -1,4 +1,4 @@
-import { Client, ChatInputCommandInteraction, GuildMember,GuildMemberRoleManager,ChannelType } from "discord.js";
+import { Client, ChatInputCommandInteraction, GuildMember,GuildMemberRoleManager,ChannelType, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import { getCollections } from '../mongoDB'
 import createOracleEmbed from "../Utils/createOracleEmbed";
 
@@ -69,14 +69,28 @@ const createLogisticsTicket = async (interaction: ChatInputCommandInteraction): 
         allow: ["ViewChannel"]
     }] as any[])
 
-    const prm: any[] = [{
+    const admin_perm = []
+    for (let i = 0;i<config.admin.length;i++){
+        admin_perm.push(
+            {
+                id: config.admin[i],
+                allow: [
+                    PermissionFlagsBits.ViewChannel,
+                    PermissionFlagsBits.SendMessages
+                ]
+            }
+        )
+    }
+    let prm: any[] = [{
         id: interaction.guild.roles.everyone.id, 
         deny: ["ViewChannel"]
     },
     {
         id: rl.id, 
         allow: ["ViewChannel"]
-    }]
+    }
+    ]
+    prm = prm.concat(admin_perm)
     let chnl
     try {
         chnl = await interaction.guild.channels.create({
