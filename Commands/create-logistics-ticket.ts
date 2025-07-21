@@ -98,7 +98,8 @@ const createLogisticsTicket = async (interaction: ChatInputCommandInteraction): 
     try {
         msg = await chnl.send({embeds: [ticketEmbed]});
         
-    } catch{
+    } catch (error){
+        console.log(error)
         interaction.editReply("there was an issue sending a message the ticket's channel, check to make sure the bot has the correct permissions")
         return false
         
