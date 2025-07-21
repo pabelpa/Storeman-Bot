@@ -69,18 +69,6 @@ const createLogisticsTicket = async (interaction: ChatInputCommandInteraction): 
         allow: ["ViewChannel"]
     }] as any[])
 
-    const admin_perm = []
-    for (let i = 0;i<config.admin.length;i++){
-        admin_perm.push(
-            {
-                id: config.admin[i],
-                allow: [
-                    PermissionFlagsBits.ViewChannel,
-                    PermissionFlagsBits.SendMessages
-                ]
-            }
-        )
-    }
     let prm: any[] = [{
         id: interaction.guild.roles.everyone.id, 
         deny: ["ViewChannel"]
@@ -88,9 +76,15 @@ const createLogisticsTicket = async (interaction: ChatInputCommandInteraction): 
     {
         id: rl.id, 
         allow: ["ViewChannel"]
+    },
+    {
+        id:config.botId,
+        allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages
+        ]
     }
     ]
-    prm = prm.concat(admin_perm)
     let chnl
     try {
         chnl = await interaction.guild.channels.create({
@@ -102,7 +96,7 @@ const createLogisticsTicket = async (interaction: ChatInputCommandInteraction): 
         });
 
     } catch{
-        interaction.editReply("there was an issue creating the logi channel, check to make sure the bot has the correct permissions")
+        interaction.editReply("there was an issue creating the ticket channel, check to make sure the bot has the correct permissions")
         return false
     }
     
