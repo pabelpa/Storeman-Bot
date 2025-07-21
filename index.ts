@@ -682,7 +682,7 @@ const main = async (): Promise<void> => {
           content: "Working on it...",
           ephemeral: true,
         });
-
+      }
       if (process.env.STOCKPILER_MULTI_SERVER === "true") {
         if (!(interaction.guildId! in multiServerCommandQueue)) {
           multiServerCommandQueue[interaction.guildId!] = [interaction];
