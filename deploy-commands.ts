@@ -303,7 +303,7 @@ const commands = [
     new SlashCommandBuilder().setName('lb-discard').setDescription('gets rid of your logi ticket being built'),
     new SlashCommandBuilder().setName('lb-complete').setDescription('finishes the construction of your logi ticket and lets people work on it'),
     new SlashCommandBuilder().setName('deliver').setDescription('marks contributions to a logi ticket')
-        .addStringOption((option) => option.setName("resource").setDescription("resource requested").setRequired(true))
+        .addStringOption((option) => option.setName("resource").setDescription("resource requested").setRequired(true).setAutocomplete(true))
         .addIntegerOption((option) => option.setName("amount").setDescription("number of resource").setRequired(true)),
 
 ].map(command => command.toJSON())

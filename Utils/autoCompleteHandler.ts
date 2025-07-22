@@ -51,6 +51,25 @@ const spFacComplete = async (interaction: AutocompleteInteraction, collections: 
     await interaction.respond(filtered);
 }
 
+const deliverAC = async (interaction: AutocompleteInteraction, collections: any) => {
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+
+    const items = await collections.tickets.findOne({
+        complete: true,
+        channelId: interaction.channelId
+    }).logisticsTypes;
+
+    const filtered: Array<ApplicationCommandOptionChoiceData> = []
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].toLowerCase().indexOf(focusedValue) !== -1) {
+            filtered.push({ name: items[i], value: items[i] })
+        }
+
+        if (filtered.length >= 25) break
+    }
+    await interaction.respond(filtered);
+}
+
 const spGroupComplete = async (interaction: AutocompleteInteraction, collections: any) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();
 
@@ -81,7 +100,8 @@ const commands: any = {
     'spgroup': { 'name': spGroupComplete, 'stockpile_name': spStockpileComplete },
     'spsetmsupp':{'name': spFacComplete,},
     'spmsuppcons':{'name': spFacComplete,},
-    'spremovefac':{'name': spFacComplete,}
+    'spremovefac':{'name': spFacComplete,},
+    'deliver':{'name': deliverAC,}
 
 }
 
