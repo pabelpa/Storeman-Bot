@@ -61,7 +61,7 @@ import lbComplete from "./Commands/lb-complete";
 
 require("dotenv").config();
 const host = process.env.APP_HOST ? process.env.APP_HOST : "0.0.0.0";
-const currentVersion = 24;
+const currentVersion = 25;
 const commandMapping: any = {
   sphelp: { sub: false, vars: 1, handler: sphelp },
   spcode: {
