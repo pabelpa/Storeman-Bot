@@ -69,41 +69,41 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
 
         if (q && q.type == ChannelType.GuildText){
 
-        const logiChannelEmbed = createOracleEmbed('Logistics Ticket [COMPLETE] (' + t.location + ") - " + t.ticketId , "**Logistics order complete**, all resources have been delivered to the appropriate location", 
-            t.logisticsTypes?.map((v, i) => {
-                if (!t || !t.demanded || !t.delivered) return {name: "A", value: "A"};
-                return {name: v.toString(), value: t.delivered[i].toString() + " / " + t.demanded[i].toString()}
-            }) as {value: string, name: string}[] , "");
-        
-        /*
-        await interaction.guild?.channels.edit(q, {
-            permissionOverwrites: [
-                {
-                    id: interaction.guild.roles.everyone.id, 
-                    deny: ["ViewChannel"]
-                },
-                {
-                    id: t.ticketRoleId, 
-                    deny: ["ViewChannel"]
-                },
-                {
-                    id: interaction.guild.roles.highest.id,
-                    allow: ["ViewChannel"]
-                },
-            ]
-        });
-        */
+            const logiChannelEmbed = createOracleEmbed('Logistics Ticket [COMPLETE] (' + t.location + ") - " + t.ticketId , "**Logistics order complete**, all resources have been delivered to the appropriate location", 
+                t.logisticsTypes?.map((v, i) => {
+                    if (!t || !t.demanded || !t.delivered) return {name: "A", value: "A"};
+                    return {name: v.toString(), value: t.delivered[i].toString() + " / " + t.demanded[i].toString()}
+                }) as {value: string, name: string}[] , "");
+            
+            /*
+            await interaction.guild?.channels.edit(q, {
+                permissionOverwrites: [
+                    {
+                        id: interaction.guild.roles.everyone.id, 
+                        deny: ["ViewChannel"]
+                    },
+                    {
+                        id: t.ticketRoleId, 
+                        deny: ["ViewChannel"]
+                    },
+                    {
+                        id: interaction.guild.roles.highest.id,
+                        allow: ["ViewChannel"]
+                    },
+                ]
+            });
+            */
 
-        if (t.ticketPostEmbed && t.ticketPostChannel){
-            const p = await interaction.client.channels.fetch(t.ticketPostChannel);
-            if (!p || !p.isTextBased()) return false;
+            if (t.ticketPostEmbed && t.ticketPostChannel){
+                const p = await interaction.client.channels.fetch(t.ticketPostChannel);
+                if (!p || !p.isTextBased()) return false;
 
-            await p.messages.fetch(t.ticketPostEmbed).then(async msg => {
-                if (!msg) return;
+                await p.messages.fetch(t.ticketPostEmbed).then(async msg => {
+                    if (!msg) return;
 
-                await (msg as any).edit({embeds: [logiChannelEmbed], components: []})
-            });    
-        }
+                    await (msg as any).edit({embeds: [logiChannelEmbed], components: []})
+                });    
+            }
         
         }
 

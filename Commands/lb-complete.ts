@@ -53,12 +53,11 @@ const lbComplete = async (interaction: ChatInputCommandInteraction): Promise<boo
 
     await getCollections().tickets.updateOne(
         {
-        author: interaction.user.username,
-        complete: false
-    },
-        {
-        $set:{complete: true}
-    })
+            _id:t._id
+        },
+            {
+            $set:{complete: true}
+        })
     
     let config = await getCollections().config.findOne({})
     if (!config) return false
@@ -80,8 +79,7 @@ const lbComplete = async (interaction: ChatInputCommandInteraction): Promise<boo
         ]});
         await getCollections().tickets.updateOne(
         {
-            author: interaction.user.username,
-            complete: false
+            _id:t._id
         },
             {
             $set:{
