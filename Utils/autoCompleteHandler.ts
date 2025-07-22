@@ -58,16 +58,22 @@ const deliverAC = async (interaction: AutocompleteInteraction, collections: any)
         complete: true,
         channelId: interaction.channelId
     }).logisticsTypes;
+    if (items){
 
-    const filtered: Array<ApplicationCommandOptionChoiceData> = []
-    for (let i = 0; i < items.length; i++) {
-        if (items[i].toLowerCase().indexOf(focusedValue) !== -1) {
-            filtered.push({ name: items[i], value: items[i] })
+        console.log(items)
+        const filtered: Array<ApplicationCommandOptionChoiceData> = []
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].toLowerCase().indexOf(focusedValue) !== -1) {
+                filtered.push({ name: items[i], value: items[i] })
+            }
+            
+            if (filtered.length >= 25) break
         }
-
-        if (filtered.length >= 25) break
+        console.log(filtered)
+        await interaction.respond(filtered);
+    } else {
+        await interaction.respond([])
     }
-    await interaction.respond(filtered);
 }
 
 const spGroupComplete = async (interaction: AutocompleteInteraction, collections: any) => {
@@ -101,7 +107,7 @@ const commands: any = {
     'spsetmsupp':{'name': spFacComplete,},
     'spmsuppcons':{'name': spFacComplete,},
     'spremovefac':{'name': spFacComplete,},
-    'deliver':{'name': deliverAC,}
+    'deliver':{'resource': deliverAC,}
 
 }
 
