@@ -54,10 +54,13 @@ const spFacComplete = async (interaction: AutocompleteInteraction, collections: 
 const deliverAC = async (interaction: AutocompleteInteraction, collections: any) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();
 
-    const items = await collections.tickets.findOne({
+    const t = await collections.tickets.findOne({
         complete: true,
         channelId: interaction.channelId
-    }).logisticsTypes;
+    })
+    console.log(t)
+    const items = t.logisticsTypes;
+    console.log(interaction.channelId)
     if (items){
 
         console.log(items)
