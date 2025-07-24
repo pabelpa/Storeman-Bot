@@ -159,9 +159,9 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
     if (!fulfilled){
         await interaction.channel.messages.fetch(t.updateEmbed).then(msg => (msg as any).edit({embeds: [ticketChannelEmbed]}));
 
-        // interaction.editReply({content: "**Logged delivery of " + interaction.options.getInteger("amount") + " " + interaction.options.getString("resource") + (interaction.options.getString("resource")?.endsWith("s") ? "" : "s") + " to " + t.location +" by <@" + (interaction.user.id) + ">**"})
+        interaction.followUp({content: "**Logged delivery of " + interaction.options.getInteger("amount") + " " + interaction.options.getString("resource") + (interaction.options.getString("resource")?.endsWith("s") ? "" : "s") + " to " + t.location +" by <@" + (interaction.user.id) + ">**"})
     }else{
-        // interaction.editReply({content:"Automatically resolving issue, all demands met"})
+        interaction.followUp({content:"Automatically resolving issue, all demands met"})
     }   
     return true
 }
