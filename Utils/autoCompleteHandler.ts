@@ -59,7 +59,7 @@ const deliverAC = async (interaction: AutocompleteInteraction, collections: any)
         channelId: interaction.channelId
     })
     if (!t){
-        return
+        await interaction.respond([])
     }
     const items = t.logisticsTypes;
     if (items){
