@@ -60,6 +60,7 @@ const deliverAC = async (interaction: AutocompleteInteraction, collections: any)
     })
     if (!t){
         await interaction.respond([])
+        return
     }
     const items = t.logisticsTypes;
     if (items){
