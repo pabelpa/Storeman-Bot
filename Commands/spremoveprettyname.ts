@@ -17,35 +17,29 @@ const spremoveprettyname = async (interaction: ChatInputCommandInteraction, clie
     }
 
     
-    const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+    const collections = getCollections()
     const cleanedName = stockpile.replace(/\./g, "").replace(/\$/g, "")
     const searchQuery = new RegExp(`^${cleanedName}$`, "i")
     const stockpileExist = await collections.stockpiles.findOne({ name: searchQuery })
-    if (!stockpileExist) await interaction.editReply({ content: "The stockpile with the name `" + stockpile + "` does not exist." })
-    else {
-        const configObj = (await collections.config.findOne({}))!
-        if ('prettyName' in configObj) {
-            delete configObj.prettyName[stockpileExist.name]
-            await collections.config.updateOne({}, { $set: { prettyName: configObj.prettyName } })
-            const prettyName: any = NodeCacheObj.get("prettyName")
-            if (process.env.STOCKPILER_MULTI_SERVER === "true") delete prettyName[interaction.guildId!][stockpileExist.name]
-            else delete prettyName[stockpileExist.name]
+    if (!stockpileExist)  {
+        await interaction.editReply({ content: "The stockpile with the name `" + stockpile + "` does not exist." })
+    } else {
+        if ('prettyName' in stockpileExist) {
+            await collections.stockpiles.updateOne({_id:stockpileExist._id}, { $unset: { prettyName: 1 } })
+            const times: any = NodeCacheObj.get("stockpileTimes")
+            delete times[stockpileExist.name].prettyName
 
             await interaction.editReply({ content: "Removed the pretty name from `" + stockpileExist.name + "` successfully." })
 
-            const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-            await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
-
-        }
-        else {
+            let updatedStockpile = await collections.stockpiles.findOne({name:searchQuery})
+            await updateStockpileMsg(client, interaction.guildId,updatedStockpile,true)
+        } else {
             await interaction.editReply("Error: there are no pretty names")
         }
     }
-
-
-
-
+    
     return true;
 }
+
 
 export default spremoveprettyname

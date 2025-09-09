@@ -5,7 +5,7 @@ import checkTimeNotifs from "../Utils/checkTimeNotifs";
 
 const sptimeoutnotif = async (interaction: ChatInputCommandInteraction, client: Client, set: boolean): Promise<boolean> => {
     const role = interaction.options.getRole("role")! // Tell typescript to shut up cause it's gonna return a string and not null
-    const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+    const collections = getCollections()
     if (!role) {
         await interaction.editReply({
             content: "Missing parameters"
@@ -15,8 +15,8 @@ const sptimeoutnotif = async (interaction: ChatInputCommandInteraction, client: 
 
     
 
-    const disableTimeNotif: any = NodeCacheObj.get("disableTimeNotif")
-    const timeCheckDisabled = process.env.STOCKPILER_MULTI_SERVER === "true" ? disableTimeNotif[interaction.guildId!] : disableTimeNotif
+    const timeCheckDisabled: any = NodeCacheObj.get("disableTimeNotif")
+
     if (timeCheckDisabled) {
         await interaction.editReply({ content: "Error: The time-checking feature of Storeman Bot is disabled for this server. Please use `/spdisabletime` to enable it." })
         return false
@@ -35,8 +35,7 @@ const sptimeoutnotif = async (interaction: ChatInputCommandInteraction, client: 
         }
         const notifRoles: any = NodeCacheObj.get("notifRoles")
 
-        if (process.env.STOCKPILER_MULTI_SERVER === "true") notifRoles[interaction.guildId!].push(role.id)
-        else notifRoles.push(role.id)
+        notifRoles.push(role.id)
 
         await collections.config.updateOne({}, { $push: { notifRoles: role.id } })
         await interaction.editReply({ content: "Successfully added " + role.name + " to the stockpile expiry notification list", })

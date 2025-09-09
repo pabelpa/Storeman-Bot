@@ -18,7 +18,7 @@ const spaddloc = async (interaction: ChatInputCommandInteraction, client: Client
     }
 
     
-    const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+    const collections = getCollections()
     const locationMappings: any = NodeCacheObj.get("locationMappings")
     const cleanedName = stockpile.replace(/\./g, "").replace(/\$/g, "")
     const searchQuery = new RegExp(`^${cleanedName}$`, "i")
@@ -32,24 +32,16 @@ const spaddloc = async (interaction: ChatInputCommandInteraction, client: Client
     const stockpileExist = await collections.stockpiles.findOne({ name: searchQuery })
     if (!stockpileExist) await interaction.editReply({ content: "The stockpile with the name `" + stockpile + "` does not exist." })
     else {
-        const configObj = (await collections.config.findOne({}))!
-        if ("stockpileLocations" in configObj) {
-            configObj.stockpileLocations[stockpileExist.name] = cleanedLocation
-            await collections.config.updateOne({}, { $set: { stockpileLocations: configObj.stockpileLocations } })
-        }
-        else {
-            const locationObj: any = {}
-            locationObj[stockpileExist.name] = cleanedLocation
-            await collections.config.updateOne({}, { $set: { stockpileLocations: locationObj } })
-        }
+        await collections.stockpiles.updateOne(
+            {_id:stockpileExist._id},
+            {$set:{location:cleanedLocation}}
+        )
+
         await interaction.editReply({ content: "Added the location `" + locationMappings[cleanedLocation] + "` to stockpile `" + stockpileExist.name + "` successfully." })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, facMsg,stockpileMsgsHeader, refreshAll])
+        let updatedStockpile = await collections.stockpiles.findOne({ name: searchQuery })
+        await updateStockpileMsg(client,"",updatedStockpile,true)
     }
-
-
-
 
     return true;
 }

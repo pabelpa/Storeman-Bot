@@ -305,6 +305,10 @@ const commands = [
     new SlashCommandBuilder().setName('deliver').setDescription('marks contributions to a logi ticket')
         .addStringOption((option) => option.setName("resource").setDescription("resource requested").setRequired(true).setAutocomplete(true))
         .addIntegerOption((option) => option.setName("amount").setDescription("number of resource").setRequired(true)),
+    new SlashCommandBuilder().setName('create-forum-channel').setDescription('makes a "forum" type channel with the specified name')
+        .addStringOption((option) => option.setName("channel-name").setDescription("name of channel").setRequired(true)),
+    new SlashCommandBuilder().setName('set-bot-channel-cat').setDescription('designates a channel category for bot things')
+        .addChannelOption((option) => option.setName("channel-category").setDescription("name of channel category").setRequired(true)),
 
 ].map(command => command.toJSON())
 

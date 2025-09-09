@@ -1,65 +1,32 @@
-import { Client, ChatInputCommandInteraction, GuildMember, TextChannel } from "discord.js";
+import { Client, ChatInputCommandInteraction, GuildMember, TextChannel,ForumChannel } from "discord.js";
 import { getCollections } from '../mongoDB';
 import checkPermissions from "../Utils/checkPermissions";
 
 const spremovelogichannel = async (interaction: ChatInputCommandInteraction, client: Client): Promise<boolean> => {
-    const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+    const collections = getCollections()
     const configDoc = (await collections.config.findOne({}))!
 
     if (!(await checkPermissions(interaction, "admin", interaction.member as GuildMember))) return false
 
-    
-    if ("channelId" in configDoc) {
-        const channelObj = client.channels.cache.get(configDoc.channelId) as TextChannel
-        try {
-            const msg = await channelObj.messages.fetch(configDoc.stockpileHeader)
-            await msg.delete()
-        }
-        catch (e) {
-            console.log("Failed to delete stockpileHeader")
-        }
-        try {
-            const msg = await channelObj.messages.fetch(configDoc.stockpileMsgsHeader)
-            await msg.delete()
-        }
-        catch (e) {
-            console.log("Failed to delete stockpileHeader")
-        }
-        for (let i = 0; i < configDoc.stockpileMsgs.length; i++) {
+    const stockpiles = await collections.stockpiles.find({}).toArray()
+    if ("stockpileChannelId" in configDoc) {
+        const oldChannel = client.channels.cache.get(configDoc.stockpileChannelId) as ForumChannel
+        
+        for (let i = 0; i < stockpiles.length; i++) {
+            let stockpile = stockpiles[i]
             try {
-                const msg = await channelObj.messages.fetch(configDoc.stockpileMsgs[i])
-
-                await msg.delete()
+                let threadId = stockpile.thread
+                let thread = await oldChannel.threads.fetch(threadId)
+                if (thread){
+                    await thread?.delete()
+                }
             }
             catch (e) {
-                console.log("Failed to delete msg")
+                console.log("Failed to delete thread for stockpile "+stockpile.name)
             }
         }
-        for (let i = 0; i < configDoc.targetMsg.length; i++) {
-            try {
-                const msg = await channelObj.messages.fetch(configDoc.targetMsg[i])
-                await msg.delete()
-            }
-            catch (e) {
-                console.log("Failed to delete a targetMsg")
-            }
-        }
-        try {
-            const refreshAllID = await channelObj.messages.fetch(configDoc.refreshAllID)
-            if (refreshAllID) await refreshAllID.delete()
-        }
-        catch (e) {
-            console.log("Failed to delete refreshAll msg")
-        }
-       
-
-        await collections.config.updateOne({}, { $unset: { channelId: 0, stockpileHeader: 0, stockpileMsgs: 0, targetMsg: 0, stockpileMsgsHeader: 0, refreshAllID: 0 } })
-
-        await interaction.editReply({
-            content: "Logi channel was successfully deleted",
-        });
-    }
-    else {
+        collections.config.updateOne({}, {$unset:{stockpileChannelId:1}})
+    } else {
         await interaction.editReply({
             content: "Logi channel was not set. Unable to remove."
         });

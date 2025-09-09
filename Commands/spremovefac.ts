@@ -23,9 +23,6 @@ const spremovefac = async (interaction: ChatInputCommandInteraction, client: Cli
     if ((await collections.facilities.deleteOne({ name: searchQuery })).deletedCount > 0) {
         const configObj = (await collections.config.findOne({}))!
 
-        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        console.log(stockpileMsgs)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
 
         const msuppsLeft: any = NodeCacheObj.get("msuppsLeft")
         let stockpileTimes: any;

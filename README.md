@@ -65,3 +65,9 @@ Gone are the days of QM-Teams manually inputting amounts using eye-power into sp
 3. Do I need my own server to host this bot?
    You have a choice! As of 26/2/2022, Storeman Bot can run in either multi-server mode or single server mode. What that means is that you can either use the [Public Storeman Bot](https://discord.com/oauth2/authorize?client_id=946968895170969620&permissions=2147617792&scope=bot%20applications.commands) or host your own by following the instructions above!
 4. Will other clans/opposite faction be able to see my stockpiles!? No. (**Disclaimer:** Just like in any public Discord bot, I will be able to see the data you save into the Public Storeman Bot. However, I keep it securely in my own server and do not ever touch it or use it to my advantage 😄)
+
+
+forum for browsing stockpile inventory
+create logi request -> create thread and ticket -> link ticket in thread -> keep total supplies in ticket -> keep track of contribution in ticket
+^stored in a channel with theads only (special logi orders)
+Standing Logi orders channel -> auto completes and refreshes once per day

@@ -1,7 +1,7 @@
-import { Client, ChatInputCommandInteraction, GuildMember, ActionRowBuilder, ButtonBuilder, TextChannel } from "discord.js";
+import { Client, ChatInputCommandInteraction, GuildMember, ActionRowBuilder, ButtonBuilder, TextChannel, ForumChannel } from "discord.js";
 import { getCollections } from '../mongoDB';
 import checkPermissions from "../Utils/checkPermissions";
-import generateMsg from '../Utils/generateStockpileMsg'
+import updateStockpileMsgEntryPoint from "../Utils/updateStockpileMsg";
 
 const spsetlogichannel = async (interaction: ChatInputCommandInteraction, client: Client): Promise<boolean> => {
     try {
@@ -16,103 +16,51 @@ const spsetlogichannel = async (interaction: ChatInputCommandInteraction, client
             return false
         }
 
+        const collections = getCollections()
         
-
-        const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
-        const channelObj = client.channels.cache.get(channel.id) as TextChannel
-
         const configDoc = (await collections.config.findOne({}))!
-        if ("stockpileHeader" in configDoc) {
-            // Delete previous message if it exists
-            const newChannelObj = client.channels.cache.get(configDoc.channelId) as TextChannel
-            try {
-                const msg = await newChannelObj.messages.fetch(configDoc.stockpileMsgsHeader)
-                await msg.delete()
-            }
-            catch (e) {
-                console.log("Failed to delete stockpileMsgsHeader")
-            }
-            try {
-                const msg = await newChannelObj.messages.fetch(configDoc.stockpileHeader)
-                await msg.delete()
-            }
-            catch (e) {
-                console.log("Failed to delete stockpile header msg")
-            }
-            for (let i = 0; i < configDoc.stockpileMsgs.length; i++) {
+
+        // Delete previous thread if it exists
+        const stockpiles = await collections.stockpiles.find({}).toArray()
+        if ("stockpileChannelId" in configDoc) {
+            const oldChannel = client.channels.cache.get(configDoc.stockpileChannelId) as ForumChannel
+            
+            for (let i = 0; i < stockpiles.length; i++) {
+                let stockpile = stockpiles[i]
                 try {
-                    const stockpileMsg = await newChannelObj.messages.fetch(configDoc.stockpileMsgs[i])
-                    if (stockpileMsg) await stockpileMsg.delete()
+                    let threadId = stockpile.thread
+                    let thread = await oldChannel.threads.fetch(threadId)
+                    if (thread){
+                        await thread?.delete()
+                    }
                 }
                 catch (e) {
-                    console.log("Failed to delete msg")
+                    console.log("Failed to delete thread for stockpile "+stockpile.name)
                 }
             }
+        }
 
-            for (let i = 0; i < configDoc.targetMsg.length; i++) {
+        let newChannel
+        try{
+            newChannel = client.channels.cache.get(channel.id) as ForumChannel
+        } catch{
+            console.log("there was an issue getting the new channel")
+        }
+
+        if (newChannel){
+            collections.config.updateOne({},{$set:{stockpileChannelId:newChannel.id}})
+            for (let i = 0; i < stockpiles.length; i++) {
+                let stockpile = stockpiles[i]
                 try {
-                    const targetMsgObj = await newChannelObj.messages.fetch(configDoc.targetMsg[i])
-                    if (targetMsgObj) await targetMsgObj.delete()
+                    stockpile = (await collections.stockpiles.findOne({_id:stockpile._id}))!
+                    updateStockpileMsgEntryPoint(client,"",stockpile,false)
                 }
                 catch (e) {
-                    console.log("Failed to delete target msg")
-                }
-            }
-            for (let i = 0; i < configDoc.facMsg.length; i++) {
-                try {
-                    const targetMsgObj = await newChannelObj.messages.fetch(configDoc.facMsg[i])
-                    if (targetMsgObj) await targetMsgObj.delete()
-                }
-                catch (e) {
-                    console.log("Failed to delete fac msg")
+                    console.log("Failed to create new thread for stockpile "+stockpile.name)
                 }
             }
 
-            try {
-                const refreshAllID = await newChannelObj.messages.fetch(configDoc.refreshAllID)
-                if (refreshAllID) await refreshAllID.delete()
-            }
-            catch (e) {
-                console.log("Failed to delete refreshAll msg")
-            }
         }
-        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateMsg(false, interaction.guildId)
-        const newMsg = await channelObj.send(stockpileHeader)
-        const stockpileMsgsHeaderID = await channelObj.send(stockpileMsgsHeader)
-        let stockpileMsgIDs: any = []
-        let stockpileIndex = 0
-        for (let i = 0; i < stockpileMsgs.length; i++) {
-
-            if (typeof stockpileMsgs[i] !== "string") {
-                const temp = await channelObj.send({ content: stockpileMsgs[i][0], components: [stockpileMsgs[i][1]] })
-                stockpileMsgIDs.push(temp.id)
-                stockpileIndex += 1
-            }
-            else {
-                const temp = await channelObj.send(stockpileMsgs[i])
-                stockpileMsgIDs.push(temp.id)
-            }
-
-
-        }
-
-        // Send refresh all stockpiles
-        const refreshAllID = await channelObj.send({ content: "----------\nRefresh the timer of **all stockpiles**", components: [refreshAll] })
-
-        let targetMsgIDs: String[] = []
-        for (let i = 0; i < targetMsg.length; i++) {
-            const targetMsgID = await channelObj.send(targetMsg[i])
-            targetMsgIDs.push(targetMsgID.id)
-        }
-        let facMsgIds: String[] = []
-        for (let i = 0; i < facMsg.length; i++) {
-            console.log(facMsg[i])
-            const facMsgId = await channelObj.send(facMsg[i])
-            facMsgIds.push(facMsgId.id)
-        }
-
-        await collections.config.updateOne({}, { $set: { stockpileHeader: newMsg.id, stockpileMsgs: stockpileMsgIDs, targetMsg: targetMsgIDs,facMsg:facMsgIds, channelId: channel.id, stockpileMsgsHeader: stockpileMsgsHeaderID.id, refreshAllID: refreshAllID.id } })
-
 
         await interaction.editReply({
             content: "Logi channel successfully set to '" + channel.name + "'",

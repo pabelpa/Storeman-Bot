@@ -30,9 +30,6 @@ const spremovetarget = async (interaction: ChatInputCommandInteraction, client: 
             content: "Item `" + item + "` was not found in the target list."
         });
     }
-
-    const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
     
     await interaction.editReply({
         content: "Item `" + item + "` has been removed from the target list."

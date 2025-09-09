@@ -27,8 +27,7 @@ const spmsuppcons = async (interaction: ChatInputCommandInteraction, client: Cli
         await collections.facilities.updateOne({ name: cleanedName }, { $set: { msupp:msupp,timeLeft:""} })
         await interaction.editReply({ content: "Updated msupp consuption for `" + facility + "` facility to  `" + `${msupp}` + "` successfully. Now, specify how many msupps are left with `/spsetmsupp`." })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, facMsg,stockpileMsgsHeader, refreshAll])
+
     }
 
 

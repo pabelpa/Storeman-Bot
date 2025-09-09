@@ -59,8 +59,6 @@ const spaddfacility = async (interaction: ChatInputCommandInteraction, client: C
         await collections.facilities.insertOne(insertObj)
         await interaction.editReply({ content: "Added the facility `" + cleanedName + "` successfully." })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg, facilitiesmsgs, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, facilitiesmsgs, stockpileMsgsHeader, refreshAll])
     }
 
 

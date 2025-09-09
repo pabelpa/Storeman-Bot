@@ -12,7 +12,7 @@ const spfind = async (interaction: ChatInputCommandInteraction): Promise<boolean
     const itemListBoth = NodeCacheObj.get("itemListBoth") as Array<string>
     const lowerToOriginal: any = NodeCacheObj.get("lowerToOriginal")
     const locationMappings: any = NodeCacheObj.get("locationMappings")
-    const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+    const collections = getCollections()
 
     const cleanitem = item.replace(/\$/g, "").replace(/\./g, "_").toLowerCase()
 
@@ -28,7 +28,7 @@ const spfind = async (interaction: ChatInputCommandInteraction): Promise<boolean
         for (let i = 0; i < stockpiles.length; i++) {
             const current = stockpiles[i]
             if (cleanitem in current.items) {
-                msg += `**__${current.name}__**${current.name in stockpileLocations ? " (Location: " + locationMappings[stockpileLocations[current.name]] + ")" : ""}:\n`
+                msg += `**__${current.name}__**${current.location ? " (Location: " + locationMappings[current.location] + ")" : ""}:\n`
                 msg += current.items[cleanitem] + " - " + lowerToOriginal[cleanitem] + "\n"
 
                 if (cleanitem.indexOf("crate") !== -1) {
@@ -50,7 +50,7 @@ const spfind = async (interaction: ChatInputCommandInteraction): Promise<boolean
                     // Since the item the user is searching for is a crated item, search for its non crated version as well 
                     const nonCratedItem = cleanitem.replace(" crate", "")
                     if (nonCratedItem in current.items) {
-                        msg += `**__${current.name}__**${current.name in stockpileLocations ? " (Location: " + locationMappings[stockpileLocations[current.name]] + ")" : ""}:\n`
+                        msg += `**__${current.name}__**${current.location ? " (Location: " + locationMappings[current.location] + ")" : ""}:\n`
                         msg += current.items[nonCratedItem] + " - `" + lowerToOriginal[nonCratedItem] + "`\n"
                     }
                 }
@@ -58,7 +58,7 @@ const spfind = async (interaction: ChatInputCommandInteraction): Promise<boolean
                     // Since the item the user is searching for is a non-crated item, search for its crated version as well
                     const cratedItem = cleanitem + " crate"
                     if (cratedItem in current.items) {
-                        msg += `**__${current.name}__**${current.name in stockpileLocations ? " (Location: " + locationMappings[stockpileLocations[current.name]] + ")" : ""}:\n`
+                        msg += `**__${current.name}__**${current.location ? " (Location: " + locationMappings[current.location] + ")" : ""}:\n`
                         msg += current.items[cratedItem] + " - `" + lowerToOriginal[cratedItem] + "`\n"
                     }
                 }

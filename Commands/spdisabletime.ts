@@ -20,31 +20,33 @@ const spdisabletime = async (interaction: ChatInputCommandInteraction, client: C
 
     await collections.config.updateOne({}, { $set: { disableTimeNotif: disable } })
 
-    const disableTimeNotif: any = NodeCacheObj.get("disableTimeNotif")
-    if (process.env.STOCKPILER_MULTI_SERVER === "true") disableTimeNotif[interaction.guildId!] = disable
-    else NodeCacheObj.set("disableTimeNotif", disable)
+    NodeCacheObj.set("disableTimeNotif", disable)
 
-    if (disable) {
-        const configObj = (await collections.config.findOne({}))!
-        if ("channelId" in configObj && "warningMsgId" in configObj) {
-            try {
-                const channelObj = client.channels.cache.get(configObj.channelId) as TextChannel
-                const stockpileMsg = await channelObj.messages.fetch(configObj.warningMsgId)
-                if (stockpileMsg) await stockpileMsg.delete()
-            }
-            catch (e) {
-                console.log(e)
-                console.log("Failed to delete warning msg")
-            }
-        }
-    }
+    // TODO: update when warning channel is added
+    // if (disable) {
+    //     const configObj = (await collections.config.findOne({}))!
+    //     if ("channelId" in configObj && "warningMsgId" in configObj) {
+    //         try {
+    //             const channelObj = client.channels.cache.get(configObj.channelId) as TextChannel
+    //             const stockpileMsg = await channelObj.messages.fetch(configObj.warningMsgId)
+    //             if (stockpileMsg) await stockpileMsg.delete()
+    //         }
+    //         catch (e) {
+    //             console.log(e)
+    //             console.log("Failed to delete warning msg")
+    //         }
+    //     }
+    // }
 
     await interaction.editReply({
         content: `Successfully ${disable ? "disabled" : "enabled"} the time-checking feature of Storeman Bot`,
     });
 
-    const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-    await updateStockpileMsg(interaction.client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
+    let stockpiles = await collections.stockpiles.find({}).toArray()
+    for(let i=0;i<stockpiles.length;i++ ){
+        await updateStockpileMsg(client,"",stockpiles[i],true)
+    }
+    
     if (!disable) checkTimeNotifs(client, true, false, interaction.guildId!)
 
     return true;

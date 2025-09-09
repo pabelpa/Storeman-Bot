@@ -21,20 +21,16 @@ const spremoveloc = async (interaction: ChatInputCommandInteraction, client: Cli
     const cleanedName = stockpile.replace(/\./g, "").replace(/\$/g, "").toLowerCase()
     const searchQuery = new RegExp(`^${cleanedName}$`, "i")
     const stockpileExist = await collections.stockpiles.findOne({ name: searchQuery })
-    if (!stockpileExist) await interaction.editReply({ content: "The stockpile with the name `" + stockpile + "` does not exist." })
-    else {
-        const configObj = (await collections.config.findOne({}))!
-        if ("stockpileLocations" in configObj) {
-            delete configObj.stockpileLocations[stockpileExist.name]
-            await collections.config.updateOne({}, { $set: { stockpileLocations: configObj.stockpileLocations } })
-            await interaction.editReply({ content: "Removed the location from `" + stockpileExist.name + "` successfully." })
-        }
-        else {
-            await interaction.editReply("Error: No location information exists")
-        }
 
-        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
+    if (!stockpileExist) {
+        await interaction.editReply({ content: "The stockpile with the name `" + stockpile + "` does not exist." })
+    }
+    else {
+        
+        await collections.stockpiles.updateOne({}, { $unset: { location: 1 } })
+        await interaction.editReply({ content: "Removed the location from `" + stockpileExist.name + "` successfully." })
+        let updatedStockpile = await collections.stockpiles.findOne({name:searchQuery})
+        await updateStockpileMsg(client, interaction.guildId,updatedStockpile,true)
     }
 
 

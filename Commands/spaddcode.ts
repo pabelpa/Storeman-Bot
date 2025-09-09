@@ -18,32 +18,25 @@ const spaddcode = async (interaction: ChatInputCommandInteraction, client: Clien
     }
 
     
-    const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+    const collections = getCollections()
     const cleanedName = stockpile.replace(/\./g, "").replace(/\$/g, "")
     const searchQuery = new RegExp(`^${cleanedName}$`, "i")
    
     const cleanedCode = code.replace(/\./g, "").replace(/\$/g, "")
+
     const stockpileExist = await collections.stockpiles.findOne({ name: searchQuery })
     if (!stockpileExist) await interaction.editReply({ content: "The stockpile with the name `" + stockpile + "` does not exist." })
     else {
-        const configObj = (await collections.config.findOne({}))!
-        if ("code" in configObj) {
-            configObj.code[stockpileExist.name] = cleanedCode
-            await collections.config.updateOne({}, { $set: { code: configObj.code } })
-        }
-        else {
-            const codeObj: any = {}
-            codeObj[stockpileExist.name] = cleanedCode
-            await collections.config.updateOne({}, { $set: { code: codeObj } })
-        }
+        collections.stockpiles.updateOne(
+            {_id:stockpileExist._id},
+            {$set:{code:cleanedCode}}
+        )
+
+
         await interaction.editReply({ content: "Added the code `" + cleanedCode + "` to stockpile `" + stockpileExist.name + "` successfully." })
-
-        const [stockpileHeader, stockpileMsgs, targetMsg, facilitiesmsgs, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client, interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg, facilitiesmsgs, stockpileMsgsHeader, refreshAll])
+        let updatedStockpile = await collections.stockpiles.findOne({_id:stockpileExist._id})
+        await updateStockpileMsg(interaction.client,interaction.guildId,updatedStockpile,true)
     }
-
-
-
 
     return true;
 }

@@ -16,7 +16,6 @@ import spnotif from "./Commands/sptimeoutnotif";
 import sprole from "./Commands/sprole";
 import stockpilerUpdateStockpile from "./Utils/stockpilerUpdateStockpile";
 import spitems from "./Commands/spitems";
-import spsetorder from "./Commands/spsetorder";
 import buttonHandler from "./Utils/buttonHandler";
 import checkTimeNotifs from "./Utils/checkTimeNotifs";
 import http from "http";
@@ -57,6 +56,10 @@ import lbRemove from "./Commands/lb-remove";
 import lbView from "./Commands/lb-view";
 import lbDiscard from "./Commands/lb-discard";
 import lbComplete from "./Commands/lb-complete";
+import {categories} from "./Utils/createStockpileEmbed"
+import { arrayBuffer } from "stream/consumers";
+import createForumChannel from "./Commands/create-channels"
+import setBotChannelCat from "./Commands/set-bot-channel-cat"
 
 
 require("dotenv").config();
@@ -117,7 +120,6 @@ const commandMapping: any = {
   spsetamount: { sub: false, vars: 2, handler: spsetamount },
   spstatus: { sub: false, vars: 1, handler: spstatus },
   spsetpassword: { sub: false, vars: 1, handler: spsetpassword },
-  spsetorder: { sub: false, vars: 2, handler: spsetorder },
   spsettimeleft: { sub: false, vars: 2, handler: spsettimeleft },
   spgroup: { sub: false, vars: 2, handler: spgroup },
   spuser: { sub: false, vars: 1, handler: spuser },
@@ -136,6 +138,8 @@ const commandMapping: any = {
   'lb-view': { sub: false, vars: 1, handler: lbView },
   'lb-discard': { sub: false, vars: 1, handler: lbDiscard },
   'lb-complete': { sub: false, vars: 1, handler: lbComplete },
+  'create-forum-channel': { sub: false, vars: 1, handler: createForumChannel },
+  'set-bot-channel-cat': { sub: false, vars: 1, handler: setBotChannelCat },
 };
 const timerBP = [60 * 5, 60 * 10, 60 * 30, 60 * 60, 60 * 60 * 6, 60 * 60 * 12]; // Timer breakpoints in seconds
 
@@ -169,278 +173,89 @@ const updateFirstTimeSetup = async (newInstance: boolean): Promise<void> => {
   }
 };
 
-const guildCreateEventHandler = async (guild: Guild) => {
-  const collections = getCollections(guild.id);
-  const configObj = await collections.config.findOne({});
-  if (!configObj) {
-    // The bot has joined a new server
-    console.log(
-      "Bot has joined a new server named: " +
-        guild.name +
-        " with ID: " +
-        guild.id,
-    );
-    const password = crypto.randomBytes(32).toString("hex");
-    await collections.config.insertOne({
-      password: await argon2.hash(password),
-    });
-
-    // Insert commands into that guild
-    insertCommands(guild.id);
-
-    // Add the server record into the global settings list
-    const globalCollection = getCollections("global-settings");
-    await globalCollection.config.updateOne(
-      {},
-      { $push: { serverIDList: guild.id } },
-    );
-
-    const stockpileTimes: any = NodeCacheObj.get("stockpileTimes");
-    const disableTimeNotif: any = NodeCacheObj.get("disableTimeNotif");
-    const notifRoles: any = NodeCacheObj.get("notifRoles");
-    const prettyName: any = NodeCacheObj.get("prettyName");
-    const stockpileGroups: any = NodeCacheObj.get("stockpileGroups");
-
-    stockpileTimes[guild.id] = {};
-    notifRoles[guild.id] = [];
-    prettyName[guild.id] = {};
-    disableTimeNotif[guild.id] = false;
-    stockpileGroups[guild.id] = {};
-  }
-};
-
-const guildDeleteEventHandler = async (guildID: string) => {
-  console.log(
-    "Bot has been kicked (or deleted) from the server with ID:" + guildID,
-  );
-  const mongoClient = getMongoClientObj();
-  const db = mongoClient.db("stockpiler-" + guildID);
-  await db.dropDatabase();
-
-  const collections = getCollections("global-settings");
-  const configObj = (await collections.config.findOne({}))!;
-  let found = false;
-  for (let i = 0; i < configObj.serverIDList.length; i++) {
-    if (configObj.serverIDList[i] === guildID) {
-      found = true;
-      configObj.serverIDList.splice(i, 1);
-      break;
-    }
-  }
-  if (found) {
-    await collections.config.updateOne(
-      {},
-      { $set: { serverIDList: configObj.serverIDList } },
-    );
-    const stockpileTimes: any = NodeCacheObj.get("stockpileTimes");
-    const notifRoles: any = NodeCacheObj.get("notifRoles");
-    const prettyName: any = NodeCacheObj.get("prettyName");
-    const disableTimeNotif: any = NodeCacheObj.get("disableTimeNotif");
-    const stockpileGroups: any = NodeCacheObj.get("stockpileGroups");
-    delete stockpileTimes[guildID];
-    delete notifRoles[guildID];
-    delete prettyName[guildID];
-    delete disableTimeNotif[guildID];
-    delete stockpileGroups[guildID];
-    console.log(
-      "Deleted the database and config records of the guild successfully",
-    );
-  } else
-    console.log(
-      "Delete request received but no such guildID exists in Storeman Bot records.",
-    );
-};
-
 const createCacheStartup = async (client: Client) => {
-  if (process.env.STOCKPILER_MULTI_SERVER === "true") {
-    console.log("Storeman bot is running in multi-server mode.");
 
-    const collections = getCollections("global-settings");
-    const configObj = await collections.config.findOne();
+  // Create list of timeLefts till the stockpile expires
+  const collections = getCollections();
 
-    // Obtain list of guild IDs from Discord API to check if it matches with the one stored in the DB
-    const guildObjs = client.guilds.cache.toJSON();
-
-    let listOfGuildObjs: Guild[] = [];
-    let listOfGuildIDs: string[] = [];
-    for (let i = 0; i < guildObjs.length; i++) {
-      listOfGuildObjs.push(guildObjs[i]);
-      listOfGuildIDs.push(guildObjs[i].id);
+  const stockpiles = await collections.stockpiles.find({}).toArray();
+  let stockpileTime: any = {};
+  for (let i = 0; i < stockpiles.length; i++) {
+    if ("expireDate" in stockpiles[i]) {
+      let nextBreakPointIndex = timerBP.length - 1;
+      
+      for (let x = 0; x < timerBP.length; x++) {
+        const ExpireDate: any = stockpiles[i].expireDate;
+        const currentDate: any = new Date();
+        if ((ExpireDate - currentDate) / 1000 <= timerBP[x]) {
+          nextBreakPointIndex = x;
+          break;
+        }
+      }
+      if (nextBreakPointIndex >= 1) nextBreakPointIndex --;
+      stockpileTime[stockpiles[i].name] = {
+        expireDate: stockpiles[i].expireDate,
+        nextBreakPointIndex: nextBreakPointIndex,
+      };
     }
-
-    if (configObj) {
-      // Check if the guildID list has changed since the bot was down
-      for (let i = 0; i < listOfGuildObjs.length; i++) {
-        const currentID = listOfGuildIDs;
-        if (configObj.serverIDList.indexOf(currentID) === -1) {
-          // guildID from discord API not found inside our storage, execute createFunction
-          guildCreateEventHandler(listOfGuildObjs[i]);
-        }
-      }
-      for (let i = 0; i < configObj.serverIDList.length; i++) {
-        const currentID = configObj.serverIDList[i];
-        if (listOfGuildIDs.indexOf(currentID) === -1) {
-          // guildID from our database no longer exists in discord API, execute destroyFunction
-          guildDeleteEventHandler(currentID);
-        }
-      }
-
-      if (configObj.version < currentVersion) {
-        // Update all the commands since the version has changed
-        for (let i = 0; i < configObj.serverIDList.length; i++) {
-          insertCommands(configObj.serverIDList[i]);
-          await collections.config.updateOne(
-            {},
-            { $set: { version: currentVersion } },
-          );
-        }
-      }
-
-      let notifRoles: any = {};
-      let prettyName: any = {};
-      let stockpileTimes: any = {};
-      let disableTimeNotif: any = {};
-      let stockpileGroups: any = {};
-      for (let i = 0; i < configObj.serverIDList.length; i++) {
-        // Create custom notifRoles and prettyNames cache object
-        const serverCollections = getCollections(configObj.serverIDList[i]);
-        const serverConfigObj = (await serverCollections.config.findOne({}))!;
-        if ("notifRoles" in serverConfigObj)
-          notifRoles[configObj.serverIDList[i]] = serverConfigObj.notifRoles;
-        else notifRoles[configObj.serverIDList[i]] = [];
-        if ("prettyName" in serverConfigObj)
-          prettyName[configObj.serverIDList[i]] = serverConfigObj.prettyName;
-        else prettyName[configObj.serverIDList[i]] = {};
-
-        // Create the disable time cache object
-        if ("disableTimeNotif" in serverConfigObj)
-          disableTimeNotif[configObj.serverIDList[i]] =
-            serverConfigObj.disableTimeNotif;
-        else disableTimeNotif[configObj.serverIDList[i]] = false;
-
-        if ("stockpileGroups" in serverConfigObj)
-          stockpileGroups[configObj.serverIDList[i]] =
-            serverConfigObj.stockpileGroups;
-        else stockpileGroups[configObj.serverIDList[i]] = {};
-
-        const stockpiles = await serverCollections.stockpiles
-          .find({})
-          .toArray();
-        stockpileTimes[configObj.serverIDList[i]] = {};
-        for (let y = 0; y < stockpiles.length; y++) {
-          if ("timeLeft" in stockpiles[y]) {
-            let timeNotificationLeft = timerBP.length - 1;
-            for (let x = 0; x < timerBP.length; x++) {
-              const timeLeftProperty: any = stockpiles[y].timeLeft;
-              const currentDate: any = new Date();
-              if ((timeLeftProperty - currentDate) / 1000 <= timerBP[x]) {
-                timeNotificationLeft = x;
-                break;
-              }
-            }
-            if (timeNotificationLeft >= 1) timeNotificationLeft -= 1;
-            stockpileTimes[configObj.serverIDList[i]][stockpiles[y].name] = {
-              timeLeft: stockpiles[y].timeLeft,
-              timeNotificationLeft: timeNotificationLeft,
-            };
-          }
-        }
-      }
-
-      NodeCacheObj.set("notifRoles", notifRoles);
-      NodeCacheObj.set("prettyName", prettyName);
-      NodeCacheObj.set("stockpileTimes", stockpileTimes);
-      NodeCacheObj.set("disableTimeNotif", disableTimeNotif);
-      NodeCacheObj.set("stockpileGroups", stockpileGroups);
-    } else {
-      for (let i = 0; i < listOfGuildObjs.length; i++) {
-        guildCreateEventHandler(listOfGuildObjs[i]);
-      }
-      await collections.config.insertOne({
-        version: currentVersion,
-        serverIDList: listOfGuildIDs,
-      });
+    if ("prettyName" in stockpiles[i]) {
+      const cleanedPrettyName = stockpiles[i].prettyName.replace(/\./g, "").replace(/\$/g, "")
+      stockpileTime[stockpiles[i].name]["prettyName"] = cleanedPrettyName
     }
-
-    client.on("guildCreate", (guild) => {
-      guildCreateEventHandler(guild);
-    });
-
-    client.on("guildDelete", (guild) => {
-      guildDeleteEventHandler(guild.id);
-    });
-  } else {
-    // Create list of timeLefts till the stockpile expires
-    const collections = getCollections();
-
-    const stockpiles = await collections.stockpiles.find({}).toArray();
-    let stockpileTime: any = {};
-    for (let i = 0; i < stockpiles.length; i++) {
-      if ("timeLeft" in stockpiles[i]) {
-        let timeNotificationLeft = timerBP.length - 1;
-        for (let x = 0; x < timerBP.length; x++) {
-          const timeLeftProperty: any = stockpiles[i].timeLeft;
-          const currentDate: any = new Date();
-          if ((timeLeftProperty - currentDate) / 1000 <= timerBP[x]) {
-            timeNotificationLeft = x;
-            break;
-          }
-        }
-        if (timeNotificationLeft >= 1) timeNotificationLeft -= 1;
-        stockpileTime[stockpiles[i].name] = {
-          timeLeft: stockpiles[i].timeLeft,
-          timeNotificationLeft: timeNotificationLeft,
-        };
-      }
-    }
-    const facilites = await collections.facilities.find({}).toArray();
-    let msuppsLeft: any = {};
-    for (let i = 0; i < facilites.length; i++) {
-      if ("timeLeft" in facilites[i]) {
-        let timeNotificationLeft = timerBP.length - 1;
-        for (let x = 0; x < timerBP.length; x++) {
-          const timeLeftProperty: any = facilites[i].timeLeft;
-          const currentDate: any = new Date();
-          if ((timeLeftProperty - currentDate) / 1000 <= timerBP[x]) {
-            timeNotificationLeft = x;
-            break;
-          }
-        }
-        if (timeNotificationLeft >= 1) timeNotificationLeft -= 1;
-        msuppsLeft[facilites[i].name] = {
-          timeLeft: facilites[i].timeLeft,
-          timeNotificationLeft: timeNotificationLeft,
-        };
-      }
-    }
-    NodeCacheObj.set("stockpileTimes", stockpileTime);
-    NodeCacheObj.set("msuppsLeft", msuppsLeft);
-
-    // Check whether to insert commands and do first-time setup
-    if (process.env.NODE_ENV === "development") insertCommands();
-    const configOptions = await collections.config.findOne({}, {});
-    if (configOptions) {
-      let notifRoles = [];
-      if ("notifRoles" in configOptions) notifRoles = configOptions.notifRoles;
-      NodeCacheObj.set("notifRoles", notifRoles);
-      let prettyName: any = {};
-      let disableTimeNotif: any = false;
-      if ("prettyName" in configOptions) prettyName = configOptions.prettyName;
-      NodeCacheObj.set("prettyName", prettyName);
-      if ("disableTimeNotif" in configOptions)
-        disableTimeNotif = configOptions.disableTimeNotif;
-      NodeCacheObj.set("disableTimeNotif", disableTimeNotif);
-
-      let stockpileGroups: any = {};
-      if ("stockpileGroups" in configOptions)
-        stockpileGroups = configOptions.stockpileGroups;
-      NodeCacheObj.set("stockpileGroups", stockpileGroups);
-
-      if (configOptions.version) {
-        if (configOptions.version < currentVersion) updateFirstTimeSetup(false);
-      } else updateFirstTimeSetup(true);
-    } else updateFirstTimeSetup(true);
   }
+
+  const facilites = await collections.facilities.find({}).toArray();
+  let msuppsLeft: any = {};
+
+  for (let i = 0; i < facilites.length; i++) {
+    if ("expireDate" in facilites[i]) {
+      let nextBreakPointIndex = timerBP.length - 1;
+      for (let x = 0; x < timerBP.length; x++) {
+        const expireDate: any = facilites[i].expireDate;
+        const currentDate: any = new Date();
+        if ((expireDate - currentDate) / 1000 <= timerBP[x]) {
+          nextBreakPointIndex = x;
+          break;
+        }
+      }
+      if (nextBreakPointIndex >= 1) nextBreakPointIndex--;
+      msuppsLeft[facilites[i].name] = {
+        expireDate: facilites[i].expireDate,
+        nextBreakPointIndex: nextBreakPointIndex,
+      };
+    }
+  }
+
+  NodeCacheObj.set("stockpileTimes", stockpileTime);
+  NodeCacheObj.set("msuppsLeft", msuppsLeft);
+  NodeCacheObj.set("stockpileMsgs", {});
+
+  // Check whether to insert commands and do first-time setup
+  if (process.env.NODE_ENV === "development") insertCommands();
+
+  const configOptions = await collections.config.findOne({},)  ;
+
+  if (configOptions) {
+    let notifRoles = [];
+    if ("notifRoles" in configOptions) notifRoles = configOptions.notifRoles;
+    NodeCacheObj.set("notifRoles", notifRoles);
+
+    let disableTimeNotif: any = false;
+    if ("disableTimeNotif" in configOptions)
+      disableTimeNotif = configOptions.disableTimeNotif;
+    NodeCacheObj.set("disableTimeNotif", disableTimeNotif);
+
+    let stockpileGroups: any = {};
+    if ("stockpileGroups" in configOptions)
+      stockpileGroups = configOptions.stockpileGroups;
+    NodeCacheObj.set("stockpileGroups", stockpileGroups);
+
+    if (configOptions.version) {
+      if (configOptions.version < currentVersion) {
+        updateFirstTimeSetup(false);
+      }
+    } else updateFirstTimeSetup(true);
+  } else updateFirstTimeSetup(true);
 };
 
 const main = async (): Promise<void> => {
@@ -482,22 +297,22 @@ const main = async (): Promise<void> => {
           console.log(
             "[!!!]: An error has occured in the command " +
               interaction.commandName +
-              ". Please kindly report this to the developer on Discord (Tkai#8276)",
+              ". Please kindly report this to the developer on Discord (pabelpanator)",
           );
           interaction.followUp({
             content:
               "[❗❗❗] An error has occurred in Storeman Bot for the command `" +
               interaction.commandName +
-              "`. Please kindly send the logs below this message to the developer on Discord at Tkai#8276",
+              "`. Please kindly send the logs below this message to the developer on Discord at pabelpanator",
             ephemeral: true,
           });
         } else if (interaction.isButton()) {
           console.log(
-            "[!!!]: An error has occured in a button action. Please kindly report this to the developer on Discord (Tkai#8276)",
+            "[!!!]: An error has occured in a button action. Please kindly report this to the developer on Discord (pabelpanator)",
           );
           interaction.followUp({
             content:
-              "[❗❗❗] An error has occurred in Storeman Bot button action. Please kindly send logs below this message to the developer on Discord at Tkai#8276.",
+              "[❗❗❗] An error has occurred in Storeman Bot button action. Please kindly send logs below this message to the developer on Discord at pabelpanator.",
             ephemeral: true,
           });
         }
@@ -523,27 +338,15 @@ const main = async (): Promise<void> => {
       }
     }
 
-    if (process.env.STOCKPILER_MULTI_SERVER === "true") {
-      multiServerCommandQueue[interaction.guildId!].splice(0, 1);
-      if (multiServerCommandQueue[interaction.guildId!].length > 0) {
-        handleCommand(multiServerCommandQueue[interaction.guildId!][0]);
-      }
-      console.log(
-        "[Command Queue:] Finished 1 command for " +
-          interaction.guildId +
-          ". Remaining length of queue: " +
-          multiServerCommandQueue[interaction.guildId!].length,
-      );
-    } else {
-      commandCallQueue.splice(0, 1);
-      if (commandCallQueue.length > 0) {
-        handleCommand(commandCallQueue[0]);
-      }
-      console.log(
-        "[Command Queue:] Finished 1 command. Remaining length of queue: " +
-          commandCallQueue.length,
-      );
+    
+    commandCallQueue.splice(0, 1);
+    if (commandCallQueue.length > 0) {
+      handleCommand(commandCallQueue[0]);
     }
+    console.log(
+      "[Command Queue:] Finished 1 command. Remaining length of queue: " +
+        commandCallQueue.length,
+    );
   };
 
   // Create a new client instance
@@ -558,6 +361,12 @@ const main = async (): Promise<void> => {
     IntentsBitField.Flags.GuildMessageTyping,
     IntentsBitField.Flags.DirectMessages] });
   global.NodeCacheObj = new NodeCache({ checkperiod: 0, useClones: false });
+
+  let subCategories: any = {};
+  for (let i=0; i<categories.length;i++){
+    let index = categories[i]
+    subCategories[index]=new Array()
+  }
   const csvData: Array<any> = await new Promise(function (resolve, reject) {
     let fetchData: any = [];
     fs.createReadStream("ItemNumbering.csv")
@@ -577,6 +386,8 @@ const main = async (): Promise<void> => {
   let itemListBoth: String[] = [];
   let lowerToOriginal: any = {};
   let itemListCategoryMapping: any = {};
+  let specialCrates: any = {};
+  
 
   for (let i = 0; i < csvData.length; i++) {
     const loweredName = csvData[i].Name.slice()
@@ -589,14 +400,22 @@ const main = async (): Promise<void> => {
     lowerToOriginal[loweredName] = csvData[i].Name;
     lowerToOriginal[loweredName + " crate"] = csvData[i].Name + " crate";
 
-    if (csvData[i].StockpileCategory === "Vehicle") {
+    if (csvData[i].StockpileCategory === "Vehicle" || csvData[i].StockpileCategory === "Shippable") {
       itemListCategoryMapping[loweredName] = csvData[i].StockpileCategory;
       itemListCategoryMapping[loweredName + " crate"] =
         csvData[i].StockpileCategory + " Crate";
+      if (csvData[i].CrateExists){
+        specialCrates[loweredName] = csvData[i].perCrate
+      }
     } else {
       itemListCategoryMapping[loweredName] = csvData[i].StockpileCategory;
-      itemListCategoryMapping[loweredName + " crate"] =
-        csvData[i].StockpileCategory;
+      itemListCategoryMapping[loweredName + " crate"] = csvData[i].StockpileCategory;
+      
+    }
+
+    let catArray = subCategories[csvData[i].CustomCategory]
+    if (catArray){
+      catArray.push(loweredName)
     }
   }
 
@@ -626,6 +445,8 @@ const main = async (): Promise<void> => {
   NodeCacheObj.set("lowerToOriginal", lowerToOriginal);
   NodeCacheObj.set("itemListCategoryMapping", itemListCategoryMapping);
   NodeCacheObj.set("locationMappings", locationMappings);
+  NodeCacheObj.set("subCategories", subCategories);
+  NodeCacheObj.set("specialCrates", specialCrates);
 
   NodeCacheObj.set("timerBP", timerBP);
 
@@ -683,27 +504,14 @@ const main = async (): Promise<void> => {
           ephemeral: true,
         });
       }
-      if (process.env.STOCKPILER_MULTI_SERVER === "true") {
-        if (!(interaction.guildId! in multiServerCommandQueue)) {
-          multiServerCommandQueue[interaction.guildId!] = [interaction];
-        } else {
-          multiServerCommandQueue[interaction.guildId!].push(interaction);
-        }
 
-        if (multiServerCommandQueue[interaction.guildId!].length === 1) {
-          console.log(
-            `[Command Queue:] No queue ahead for ${interaction.guildId}, starting.`,
-          );
-          handleCommand(multiServerCommandQueue[interaction.guildId!][0]);
-        }
-      } else {
-        commandCallQueue.push(interaction);
-        if (commandCallQueue.length === 1) {
-          console.log("[Command Queue:] No queue ahead, starting.");
-          handleCommand(commandCallQueue[0]);
-          // kick start the queue
-        }
+      commandCallQueue.push(interaction);
+      if (commandCallQueue.length === 1) {
+        console.log("[Command Queue:] No queue ahead, starting.");
+        handleCommand(commandCallQueue[0]);
+        // kick start the queue
       }
+
     });
 
     // Connect by logging into Discord

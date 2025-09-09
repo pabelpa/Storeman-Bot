@@ -11,7 +11,7 @@ const spsetamount = async (interaction: ChatInputCommandInteraction, client: Cli
     const amount = interaction.options.getInteger("amount")
     const lowerToOriginal: any = NodeCacheObj.get("lowerToOriginal")
     const stockpileName = interaction.options.getString("stockpile")
-    const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+    const collections = getCollections()
 
     if (!(await checkPermissions(interaction, "user", interaction.member as GuildMember))) return false
 
@@ -100,8 +100,8 @@ const spsetamount = async (interaction: ChatInputCommandInteraction, client: Cli
 
     }
 
-    const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-    await updateStockpileMsg(client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
+    let updatedStockpile = await collections.stockpiles.findOne({name:searchQuery})
+    await updateStockpileMsg(client,"",updatedStockpile,true)
 
     await interaction.editReply({
         content: "Item `" + lowerToOriginal[cleanitem] + "` has been set to `" + amount + "` crates inside the stockpile `" + stockpileName + "`"

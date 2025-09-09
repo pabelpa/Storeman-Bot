@@ -18,30 +18,31 @@ const spaddprettyname = async (interaction: ChatInputCommandInteraction, client:
     }
 
     
-    const collections = process.env.STOCKPILER_MULTI_SERVER === "true" ? getCollections(interaction.guildId) : getCollections()
+    const collections = getCollections()
+
     const cleanedName = stockpile.replace(/\./g, "").replace(/\$/g, "")
     const searchQuery = new RegExp(`^${cleanedName}$`, "i")
-    const cleanedPrettyName = prettyName.replace(/\./g, "").replace(/\$/g, "")
-    const stockpileExist = await collections.stockpiles.findOne({ name: searchQuery })
-    if (!stockpileExist) await interaction.editReply({ content: "The stockpile with the name `" + stockpile + "` does not exist." })
-    else {
-        const configObj = (await collections.config.findOne({}))!
-        if ("prettyName" in configObj) {
-            configObj.prettyName[stockpileExist.name] = cleanedPrettyName
-            await collections.config.updateOne({}, { $set: { prettyName: configObj.prettyName } })
-        }
-        else {
-            const prettyNameObj: any = {}
-            prettyNameObj[stockpileExist.name] = cleanedPrettyName
-            await collections.config.updateOne({}, { $set: { prettyName: prettyNameObj } })
-        }
-        const prettyName: any = NodeCacheObj.get("prettyName")
-        if (process.env.STOCKPILER_MULTI_SERVER === "true") prettyName[interaction.guildId!][stockpileExist.name] = cleanedPrettyName
-        else prettyName[stockpileExist.name] = cleanedPrettyName
-        await interaction.editReply({ content: "Added the pretty name `" + cleanedPrettyName + "` to stockpile `" + stockpileExist.name + "` successfully." })
 
-        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
+    const cleanedPrettyName = prettyName.replace(/\./g, "").replace(/\$/g, "")
+    const stockpileObj = await collections.stockpiles.findOne({ name: searchQuery })
+
+    if (!stockpileObj) {
+        await interaction.editReply({ 
+            content: "The stockpile with the name `" + stockpile + "` does not exist." 
+        })
+    } else {
+        await collections.stockpiles.updateOne(
+            {_id:stockpileObj._id},
+            {$set:{prettyName:cleanedPrettyName}}
+        )
+
+        const stockpileTime: any = NodeCacheObj.get("stockpileTime")
+
+        stockpileTime[stockpileObj.name] = cleanedPrettyName
+        await interaction.editReply({ content: "Added the pretty name `" + cleanedPrettyName + "` to stockpile `" + stockpileObj.name + "` successfully." })
+
+        let updatedStockpile = await collections.stockpiles.findOne({_id:stockpileObj._id})
+        await updateStockpileMsg(client,"",updatedStockpile,true)
     }
 
 

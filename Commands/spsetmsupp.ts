@@ -31,8 +31,6 @@ const spsetmsupp = async (interaction: ChatInputCommandInteraction): Promise<boo
             }
         }
         await collections.facilities.updateOne({ name: cleanedName }, { $set: { lastUpdated: currentDate, timeLeft: newTimeLeft,msupplevel:msuppInt} })
-        const [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll] = await generateStockpileMsg(true, interaction.guildId)
-        await updateStockpileMsg(interaction.client,interaction.guildId, [stockpileHeader, stockpileMsgs, targetMsg,facMsg, stockpileMsgsHeader, refreshAll])
         await interaction.editReply({ content: "added `"+ `${msuppInt}`+"` msupps to facility with the name `" + name +"`"})
     } else {
         await interaction.editReply({ content: "The facility with the name `" + name + "` could not be found." })
