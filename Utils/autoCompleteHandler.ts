@@ -58,9 +58,11 @@ const deliverAC = async (interaction: AutocompleteInteraction, collections: any)
         complete: true,
         channelId: interaction.channelId
     })
-    console.log(t)
+    if (!t){
+        await interaction.respond([])
+        return
+    }
     const items = t.logisticsTypes;
-    console.log(interaction.channelId)
     if (items){
 
         console.log(items)
