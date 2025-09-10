@@ -33,6 +33,8 @@ const spsetlogichannel = async (interaction: ChatInputCommandInteraction, client
                     if (thread){
                         await thread?.delete()
                     }
+                    let newMsgIds:any = {}
+                    await collections.stockpiles.updateOne({_id:stockpile._id},{$set:{msgIds:newMsgIds}})
                 }
                 catch (e) {
                     console.log("Failed to delete thread for stockpile "+stockpile.name)

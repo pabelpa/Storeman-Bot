@@ -57,7 +57,7 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, stockp
     if (code) current_code = `**Stockpile Code:** \`${code}\``
     if (location) currentLocation = `**Location:** \`${locationMappings[location]}\``
     
-    let msg = await generateMsg(updateMsg,stockpile)
+    let msgs = await generateMsg(updateMsg,stockpile)
 
     const refreshButton = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
@@ -100,16 +100,23 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, stockp
                 }})  
             }
 
-            let embedMsg
-            try {
-                embedMsg =await thread?.messages.fetch(stockpile.embedMsg)
-                embedMsg?.edit({embeds:msg})
+            let msgIds = stockpile.msgIds
+            for (let stockpileCategory in msgs){
+                let msgObj = msgs[stockpileCategory]
+                try {
+                    
+                    let embedMsg =await thread?.messages.fetch(stockpile.embedMsg[stockpileCategory])
+                    embedMsg?.edit(msgObj)
+    
+                }catch{
+                    console.log(eventName + "A stockpile msg no longer exists, recreating it")
+                    const newMsg = await thread?.send(msgObj)
+                    
+                    msgIds[stockpileCategory]=newMsg?.id
+                    await collections.stockpiles.updateOne({_id:stockpile._id},{$set:{msgIds:msgIds}})
+                
+                }
 
-            }catch{
-                console.log(eventName + "A stockpile msg no longer exists, recreating it")
-                const newMsg = await thread?.send({embeds:msg})
-                await collections.stockpiles.updateOne({_id:stockpile._id},{$set:{embedMsg:newMsg?.id}})
-            
             }
         }
  

@@ -3,13 +3,16 @@ import { ButtonStyle, Embed } from "discord.js"
 import { getCollections } from "../mongoDB"
 import { validateHeaderName } from "http"
 let categories:string[] = []
-const generateSubCatString = (cat:string,stockpile:any,embed:EmbedBuilder,name:string)=>{
+const generateSubCatString = (cat:string,stockpile:any,embedArray:Array<EmbedBuilder>,name:string,color:any)=>{
     let specialCrates:any = NodeCacheObj.get("specialCrates")
     let subCats:any = NodeCacheObj.get("subCategories")
     let lowerToOriginal:any = NodeCacheObj.get("lowerToOriginal")
-    let current = subCats[cat]
+    let current = subCats[cat.replace("-","")]
     let msg = ""
     let empty = true
+    let currentEmbed = new EmbedBuilder()
+        .setColor(color)
+        .setTitle(cat.padEnd(44,"-"))
     for (let i=0;i<current.length;i++){
         
         if (name=="Vehicles"||name=="Shippables"){
@@ -36,9 +39,10 @@ const generateSubCatString = (cat:string,stockpile:any,embed:EmbedBuilder,name:s
     }
     if (msg){
         empty=false
-        embed.addFields(
-            {name:cat+": ",value:msg}
+        currentEmbed.setDescription(
+            msg
         )
+        embedArray.push(currentEmbed)
     }
     return empty
 }
@@ -91,12 +95,19 @@ categories = [
     "Ballistic",
 ]
 const createStockpileEmbeds = async (stockpile:any):Promise<EmbedBuilder[]>=>{
-    let output = new Array()
+    let output :any ={}
     let empty_i
     let stockpileInfo = [
         {
             name: "Small Arms",
-            cats: ["Rifle","Automatic Rifle","Machine Gun","Misc. Small Arms","Light Kinetic Ammo","Light Grenade"],
+            cats: [
+                "Rifle",
+                "Automatic Rifle",
+                "Machine Gun",
+                "Misc. Small Arms",
+                "Light Kinetic Ammo",
+                "Light Grenade"
+            ],
             desc: "Rifles and ammo.",
             color: 0x0099FF
         },
@@ -198,18 +209,21 @@ const createStockpileEmbeds = async (stockpile:any):Promise<EmbedBuilder[]>=>{
     for (let j=0;j<stockpileInfo.length;j++){
         let currentEmpty = true
         let currentCat = stockpileInfo[j];
-        let currentEmbed = new EmbedBuilder()
-            .setColor(currentCat.color)
-            .setTitle(currentCat.name)
-            .setDescription(currentCat.desc)
+        let currentEmbeds = new Array();
+        let currentMsg:any = {}
+        currentMsg["content"] = "# "+currentCat.name
+
         let sub = currentCat.cats
         for (let i = 0;i<sub.length;i++){
-            empty_i = generateSubCatString(sub[i],stockpile,currentEmbed,currentCat.name)
+            empty_i = generateSubCatString(sub[i],stockpile,currentEmbeds,currentCat.name,currentCat.color)
             currentEmpty = currentEmpty && empty_i
         }
         if (!currentEmpty){
-            output.push(currentEmbed)
+            currentMsg["embeds"]=currentEmbeds
+        }else{
+            currentMsg["content"]=currentMsg["content"]+"\n\n None"
         }
+        output[currentCat.name]=currentMsg
     }
 
 
