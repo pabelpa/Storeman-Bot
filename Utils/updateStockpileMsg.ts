@@ -54,8 +54,8 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, stockp
     let currentLocation  = ""
     let code = stockpile.code
     let location = stockpile.location
-    if (code) current_code = `**Stockpile Code:** \`${code}\`\n`
-    if (location) currentLocation = `**Location:** \`${locationMappings[location]}\`\n\n`
+    if (code) current_code = `**Stockpile Code:** \`${code}\``
+    if (location) currentLocation = `**Location:** \`${locationMappings[location]}\``
     
     let msg = await generateMsg(updateMsg,stockpile)
 
@@ -82,17 +82,17 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, stockp
                 let threadId = stockpile.thread
                 thread = await channelObj.threads.fetch(threadId)
                 thread?.edit({
-                    name:name,
+                    name:name+" "+aka,
                 })
                 let message = await thread?.messages.fetch(stockpile.threadHeaderMessage)
-                message?.edit({content: lastScan +"\n"+expiry+"\n",components:[refreshButton]})
+                message?.edit({content: current_code+"\n"+currentLocation+"\n"+lastScan +"\n"+expiry+"\n",components:[refreshButton]})
             }catch{
                 console.log("Thread does not exist for this stockpile. creating one")
                 thread = await channelObj.threads.create({
                     name: name+aka,
                     autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
                     reason: "Tracking Stockpile",
-                    message:{content: lastScan +"\n"+expiry+"\n",components:[refreshButton]},
+                    message:{content: current_code+"\n"+currentLocation+"\n"+lastScan +"\n"+expiry+"\n",components:[refreshButton]},
                 });
                 collections.stockpiles.updateOne({_id:stockpile._id},{$set:{
                     thread:thread.id,

@@ -36,9 +36,9 @@ const spaddprettyname = async (interaction: ChatInputCommandInteraction, client:
             {$set:{prettyName:cleanedPrettyName}}
         )
 
-        const stockpileTime: any = NodeCacheObj.get("stockpileTime")
+        const stockpileTime: any = NodeCacheObj.get("stockpileTimes")
 
-        stockpileTime[stockpileObj.name] = cleanedPrettyName
+        stockpileTime[stockpileObj.name].prettyName = cleanedPrettyName
         await interaction.editReply({ content: "Added the pretty name `" + cleanedPrettyName + "` to stockpile `" + stockpileObj.name + "` successfully." })
 
         let updatedStockpile = await collections.stockpiles.findOne({_id:stockpileObj._id})

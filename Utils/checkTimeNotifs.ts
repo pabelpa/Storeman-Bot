@@ -27,8 +27,6 @@ const checkTimeNotifs = async (client: Client, forceEdit: boolean = false, regul
     const msuppsLeft: any = NodeCacheObj.get("msuppsLeft")
     const stockpileTimes: any = NodeCacheObj.get("stockpileTimes")
 
-    const prettyName: any = NodeCacheObj.get("prettyName")
-
     if (disableTimeNotif) return false
     
     console.log(eventName + "Checking time now")
@@ -44,6 +42,7 @@ const checkTimeNotifs = async (client: Client, forceEdit: boolean = false, regul
     for (const stockpileName in stockpileTimes) {
         //expire date in ms since 1970
         const ExpireTime: any = stockpileTimes[stockpileName].expireDate
+        let prettyName = stockpileTimes[stockpileName].prettyName
 
         //current date in ms since 1970
         const currentDate: any = new Date()
@@ -58,7 +57,7 @@ const checkTimeNotifs = async (client: Client, forceEdit: boolean = false, regul
                 stockpileTimes[stockpileName].nextBreakPointIndex --
 
                 edited = true
-                warningMsg += `- \`${stockpileName in prettyName ? prettyName[stockpileName] : stockpileName}\` expires in <t:${Math.floor(ExpireTime.getTime() / 1000)}:R> ${stockpileName in prettyName ? "[a.k.a " + prettyName[stockpileName] + "]" : ""}\n`
+                warningMsg += `- \`${prettyName ? prettyName : stockpileName}\` expires in <t:${Math.floor(ExpireTime.getTime() / 1000)}:R> ${prettyName ? "[a.k.a " + stockpileName + "]" : ""}\n`
             }
         }
     }
