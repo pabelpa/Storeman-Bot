@@ -105,7 +105,7 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, stockp
                 let msgObj = msgs[stockpileCategory]
                 try {
                     
-                    let embedMsg =await thread?.messages.fetch(stockpile.embedMsg[stockpileCategory])
+                    let embedMsg =await thread?.messages.fetch(stockpile.msgIds[stockpileCategory])
                     embedMsg?.edit(msgObj)
     
                 }catch{
