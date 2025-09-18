@@ -102,8 +102,7 @@ const updateStockpileMsg = async (client: Client, guildID: string | null, stockp
 
             let msgIds = stockpile.msgIds
             if (!msgIds){
-                let newObj:any ={}
-                stockpile["msgIds"] = newObj
+                let msgIds:any ={}
             }
             for (let stockpileCategory in msgs){
                 let msgObj = msgs[stockpileCategory]
