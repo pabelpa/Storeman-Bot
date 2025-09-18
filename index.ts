@@ -198,7 +198,7 @@ const createCacheStartup = async (client: Client) => {
         nextBreakPointIndex: nextBreakPointIndex,
       };
     }
-    if ("prettyName" in stockpiles[i]) {
+    if ("prettyName" in stockpiles[i] && stockpileTime[stockpiles[i].name]) {
       const cleanedPrettyName = stockpiles[i].prettyName.replace(/\./g, "").replace(/\$/g, "")
       stockpileTime[stockpiles[i].name]["prettyName"] = cleanedPrettyName
     }
