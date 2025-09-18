@@ -82,7 +82,12 @@ const stockpilerUpdateStockpile = async (client: Client, body: any, response: ht
                                 break
                             }
                         }
-                        stockpileTimes[cleanName] = { timeLeft: newTimeLeft, timeNotificationLeft: timeNotificationLeft }
+                        if (stockpileTimes[cleanName]){
+                            stockpileTimes[cleanName].timeLeft=newTimeLeft
+                            stockpileTimes[cleanName].timeNotificationLeft = timeNotificationLeft
+                        }else{
+                            stockpileTimes[cleanName] = { timeLeft: newTimeLeft, timeNotificationLeft: timeNotificationLeft }
+                        }
                         await collections.stockpiles.updateOne({ name: cleanName }, { $set: { items: newStockpileItems, lastUpdated: currentDate, timeLeft: newTimeLeft, upperBound: new Date((new Date()).getTime() + 60 * 60 * 1000 * 50) } })
                         console.log(eventName + "upperBound exists. Modifying stockpiler timer based on last scan timing")
                     }
@@ -105,8 +110,13 @@ const stockpilerUpdateStockpile = async (client: Client, body: any, response: ht
                             }
                         }
                         console.log(stockpileTimes)
-                        stockpileTimes[cleanName] = { timeLeft: newTimeLeft, timeNotificationLeft: timeNotificationLeft }
-
+                        if (stockpileTimes[cleanName]){
+                            stockpileTimes[cleanName].timeLeft=newTimeLeft
+                            stockpileTimes[cleanName].timeNotificationLeft = timeNotificationLeft
+                        }else{
+                            stockpileTimes[cleanName] = { timeLeft: newTimeLeft, timeNotificationLeft: timeNotificationLeft }
+                        }
+                        
                         await collections.stockpiles.updateOne({ name: cleanName }, { $set: { items: newStockpileItems, lastUpdated: currentDate, timeLeft: newTimeLeft, upperBound: new Date((new Date()).getTime() + 60 * 60 * 1000 * 50) } })
                         console.log(eventName + "upperBound does not exist. Modifying stockpiler timer based on last updated timing or last scan timing")
                     }
