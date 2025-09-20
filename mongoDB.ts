@@ -21,7 +21,10 @@ interface Ticket
     complete: Boolean;
     ticketPostEmbed: string;
     ticketPostChannel: string;
+    thread: string;
+    threadMessageHeader: string;
     updateEmbed: string;
+    title: string;
     closed : Boolean;
 }
 

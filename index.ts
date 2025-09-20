@@ -64,7 +64,7 @@ import setBotChannelCat from "./Commands/set-bot-channel-cat"
 
 require("dotenv").config();
 const host = process.env.APP_HOST ? process.env.APP_HOST : "0.0.0.0";
-const currentVersion = 26;
+const currentVersion = 27;
 const commandMapping: any = {
   sphelp: { sub: false, vars: 1, handler: sphelp },
   spcode: {

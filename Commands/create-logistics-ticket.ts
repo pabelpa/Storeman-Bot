@@ -131,18 +131,15 @@ const createLogisticsTicket = async (interaction: ChatInputCommandInteraction): 
         demanded:[],
         ticketPostChannel:"",
         ticketPostEmbed:"",
+        thread:"",
+        threadMessageHeader:"",
+        title:interaction.options.getString('title') as string
     }
     const tckt_res = await collections.tickets.insertOne(tckt);
 
     await collections.config.updateOne({},{
         $push: {tickets: tckt_res.insertedId}
     });
-
-
-
-
-
-
 
     interaction.client.channels.fetch(config.logisticsTicketChannel || interaction.channelId).then(async (channel) => {
         if (!channel) return;

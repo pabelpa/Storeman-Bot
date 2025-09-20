@@ -1,5 +1,5 @@
 import { getCollections } from '../mongoDB'
-import { ChatInputCommandInteraction, ChannelType } from 'discord.js';
+import { ChatInputCommandInteraction, ChannelType, ForumChannel,ThreadAutoArchiveDuration } from 'discord.js';
 import createOracleEmbed from '../Utils/createOracleEmbed';
 const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolean> => {
     let Ticket = getCollections().tickets
@@ -75,66 +75,37 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
                     return {name: v.toString(), value: t.delivered[i].toString() + " / " + t.demanded[i].toString()}
                 }) as {value: string, name: string}[] , "");
             
-            /*
-            await interaction.guild?.channels.edit(q, {
-                permissionOverwrites: [
-                    {
-                        id: interaction.guild.roles.everyone.id, 
-                        deny: ["ViewChannel"]
-                    },
-                    {
-                        id: t.ticketRoleId, 
-                        deny: ["ViewChannel"]
-                    },
-                    {
-                        id: interaction.guild.roles.highest.id,
-                        allow: ["ViewChannel"]
-                    },
-                ]
+            const transcriptEmbed = createOracleEmbed('Logistics Ticket (' + t.ticketId + ") - Transcript" , "This ticket was recently closed, here's a transcript of the discussion:\n\n" + (t.transcript.length > 0 ? t.transcript.join("\n\n") : "*No messages were sent*"), 
+                [] , "");
+
+            let config = await getCollections().config.findOne({})
+            if (!config) return false
+            
+            // delete old thread
+            let channelObj = await interaction.client.channels.fetch(config.availableTicketChannel)
+            let oldThread = await (channelObj as ForumChannel).threads?.fetch(t.thread)
+            oldThread?.delete()
+            
+            // create archive thread
+             channelObj = await interaction.client.channels.fetch(config.archiveTicketChannel)
+
+            let thread = await (channelObj as any).threads.create({
+                name: t.title + "[COMPLETE]",
+                autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+                reason: "Ticket",
+                message:`Created by: ${t.author} Location: ${t.location}`,
             });
-            */
+            getCollections().tickets.updateOne({_id:t._id},{$set:{
+                thread:thread.id,
+                threadHeaderMessage:thread.lastMessageId
+            }}) 
 
-            if (t.ticketPostEmbed && t.ticketPostChannel){
-                const p = await interaction.client.channels.fetch(t.ticketPostChannel);
-                if (!p || !p.isTextBased()) return false;
-
-                await p.messages.fetch(t.ticketPostEmbed).then(async msg => {
-                    if (!msg) return;
-
-                    await (msg as any).edit({embeds: [logiChannelEmbed], components: []})
-                });    
-            }
+            thread.send({embeds:[logiChannelEmbed,transcriptEmbed]})
         
         }
 
         if (!interaction.guild) return false;
 
-        const users = await interaction.guild.members.list();
-        console.log("here")
-        const transcriptEmbed = createOracleEmbed('Logistics Ticket (' + t.ticketId + ") - Transcript" , "This ticket was recently closed, here's a transcript of the discussion:\n\n" + (t.transcript.length > 0 ? t.transcript.join("\n\n") : "*No messages were sent*"), 
-                [] , "");
-
-        for (let i = 0; i < users.size; i++) {
-            if (users.at(i)?.roles?.cache?.some((v) => {return v.id == t?.ticketRoleId})) {
-                await users.at(i)?.send({
-                    embeds: [
-                        transcriptEmbed
-                    ]
-                })
-            }
-        }
-        let config = (await getCollections().config.findOne({}))!
-        if (config.logChannel){
-            const b = await interaction.client.channels.fetch(config.logChannel);
-
-            if (b && b.isTextBased()){
-                await b.send({
-                    embeds: [
-                        transcriptEmbed
-                    ]
-                })
-            }
-        }
 
         const rle = await interaction.guild.roles.fetch(t.ticketRoleId);
 
@@ -157,9 +128,14 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
     
 
     if (!fulfilled){
-        await interaction.channel.messages.fetch(t.updateEmbed).then(msg => (msg as any).edit({embeds: [ticketChannelEmbed]}));
+        let channel  = interaction.channel
+        if (channel instanceof ForumChannel){
 
-        interaction.followUp({content: "**Logged delivery of " + interaction.options.getInteger("amount") + " " + interaction.options.getString("resource") + (interaction.options.getString("resource")?.endsWith("s") ? "" : "s") + " to " + t.location +" by <@" + (interaction.user.id) + ">**"})
+            let thread = await (channel as ForumChannel).threads.fetch(t.thread)
+            await thread?.messages.fetch(t.ticketPostEmbed).then(msg => (msg as any).edit({embeds: [ticketChannelEmbed]}));
+            
+            interaction.followUp({content: "**Logged delivery of " + interaction.options.getInteger("amount") + " " + interaction.options.getString("resource") + (interaction.options.getString("resource")?.endsWith("s") ? "" : "s") + " to " + t.location +" by <@" + (interaction.user.id) + ">**"})
+        }
     }else{
         interaction.followUp({content:"Automatically resolving issue, all demands met"})
     }   

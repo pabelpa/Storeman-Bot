@@ -289,8 +289,10 @@ const commands = [
         .addRoleOption((option) => option.setName("role").setDescription("role associated with inactive members").setRequired(true)),
     new SlashCommandBuilder().setName('enlist').setDescription('designate yourself as an active member'),
     new SlashCommandBuilder().setName('set-logi-ticket-channel').setDescription('designate a channel for logi tickets')
-        .addChannelOption((option) => option.setName("channel").setDescription("channel where logi tickets live").setRequired(true)),
+        .addChannelOption((option) => option.setName("channel").setDescription("channel where logi tickets live").setRequired(true))
+        .addStringOption((option) => option.setName("ticket-type").setDescription("Type of logi ticket channel").setRequired(true)),
     new SlashCommandBuilder().setName('create-logistics-ticket').setDescription('create new ticket')
+        .addStringOption((option) => option.setName("title").setDescription("Name of the ticket").setRequired(true))
         .addStringOption((option) => option.setName("location").setDescription("location for logi").setRequired(true))
         .addStringOption((option) => option.setName("notes").setDescription("anything additional")),
     new SlashCommandBuilder().setName('lb-add').setDescription('add demands to a your logi ticket')

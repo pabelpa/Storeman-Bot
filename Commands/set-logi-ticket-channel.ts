@@ -1,10 +1,14 @@
 import { getCollections } from '../mongoDB'
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction,GuildMember } from 'discord.js';
+import checkPermissions from '../Utils/checkPermissions';
 const setLogiTicketChannel = async (interaction: ChatInputCommandInteraction): Promise<boolean> => {
-
-
-    if (interaction.memberPermissions?.has("ManageChannels")){
+    const ticketTypes:any = {
+        archive:"archiveTicketChannel",
+        available:"availableTicketChannel",
+    }
+    if (await checkPermissions(interaction, "admin", interaction.member as GuildMember)){
         const q = interaction.options.getChannel('channel');
+        const ticketType = interaction.options.getString('ticket-type')!
 
         if (!q){
             interaction.editReply({content: "*Error: Invalid channel selected*"});
@@ -12,8 +16,12 @@ const setLogiTicketChannel = async (interaction: ChatInputCommandInteraction): P
             return false;
         }
 
+        
+        let channelString:string = ticketTypes[ticketType]
+        let updateObj:any = {}
+        updateObj[channelString]=q.id
         await getCollections().config.updateOne({},{
-            $set:{logisticsTicketChannel: q.id},
+            $set:updateObj,
         });
 
         interaction.editReply({content: "*Updated logi ticket channel to <# " + (q.id)  +">*"});

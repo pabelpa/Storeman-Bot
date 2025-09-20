@@ -1,5 +1,5 @@
 import { getCollections } from '../mongoDB'
-import { ChatInputCommandInteraction, GuildMemberRoleManager } from 'discord.js';
+import { ChatInputCommandInteraction, GuildMemberRoleManager,ThreadAutoArchiveDuration } from 'discord.js';
 import createOracleEmbed from '../Utils/createOracleEmbed';
 import { get } from 'http';
 const lbComplete = async (interaction: ChatInputCommandInteraction): Promise<boolean> => {
@@ -61,10 +61,21 @@ const lbComplete = async (interaction: ChatInputCommandInteraction): Promise<boo
     
     let config = await getCollections().config.findOne({})
     if (!config) return false
-    interaction.client.channels.fetch(config.logisticsTicketChannel || interaction.channelId).then(async (channel) => {
+    interaction.client.channels.fetch(config.availableTicketChannel || interaction.channelId).then(async (channel) => {
         if (!channel || !config) return;
 
-        const v = await (channel as any).send({embeds: [logiChannelEmbed], components: [
+        
+        let thread = await (channel as any).threads.create({
+            name: t.title,
+            autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+            reason: "Ticket",
+            message:`Created by: ${t.author} Location: ${t.location}`,
+        });
+        getCollections().tickets.updateOne({_id:t._id},{$set:{
+            thread:thread.id,
+            threadHeaderMessage:thread.lastMessageId
+        }}) 
+        const v = await thread.send({embeds: [logiChannelEmbed], components: [
             {
                 type: 1,
                 components: [
@@ -84,13 +95,13 @@ const lbComplete = async (interaction: ChatInputCommandInteraction): Promise<boo
             {
             $set:{
                 ticketPostEmbed: v.id,
-                ticketPostChannel: config.logisticsTicketChannel || interaction.channelId
+                ticketPostChannel: config.availableTicketChannel || interaction.channelId
             }
         })
     })
 
 
-    interaction.editReply({content: "Logistics ticket published to <#" + config.logisticsTicketChannel || interaction.channelId + "> and accessible in <#" + t.channelId + ">"})
+    interaction.editReply({content: "Logistics ticket published to <#" + config.availableTicketChannel || interaction.channelId + "> and accessible in <#" + t.channelId + ">"})
     return true
 }
 export default lbComplete
