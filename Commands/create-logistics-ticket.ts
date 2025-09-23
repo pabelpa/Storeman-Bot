@@ -88,7 +88,7 @@ const createLogisticsTicket = async (interaction: ChatInputCommandInteraction): 
     let chnl
     try {
         chnl = await interaction.guild.channels.create({
-            name: "logi-ticket-" + ticketId,
+            name: "🎫"+interaction.options.getString('title') as string,
             type: ChannelType.GuildText,
             parent: cat.id,
             permissionOverwrites: prm
