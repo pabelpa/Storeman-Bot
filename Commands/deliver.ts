@@ -129,13 +129,11 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
 
     if (!fulfilled){
         let channel  = interaction.channel
-        if (channel instanceof ForumChannel){
 
-            let thread = await (channel as ForumChannel).threads.fetch(t.thread)
-            await thread?.messages.fetch(t.ticketPostEmbed).then(msg => (msg as any).edit({embeds: [ticketChannelEmbed]}));
+        await channel.messages.fetch(t.updateEmbed).then(msg => (msg as any).edit({embeds: [ticketChannelEmbed]}));
             
-            interaction.followUp({content: "**Logged delivery of " + interaction.options.getInteger("amount") + " " + interaction.options.getString("resource") + (interaction.options.getString("resource")?.endsWith("s") ? "" : "s") + " to " + t.location +" by <@" + (interaction.user.id) + ">**"})
-        }
+        interaction.followUp({content: "**Logged delivery of " + interaction.options.getInteger("amount") + " " + interaction.options.getString("resource") + (interaction.options.getString("resource")?.endsWith("s") ? "" : "s") + " to " + t.location +" by <@" + (interaction.user.id) + ">**"})
+
     }else{
         interaction.followUp({content:"Automatically resolving issue, all demands met"})
     }   
