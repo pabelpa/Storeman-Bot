@@ -1,5 +1,5 @@
 import { getCollections } from '../mongoDB'
-import { ChatInputCommandInteraction,GuildMember } from 'discord.js';
+import { ChatInputCommandInteraction,Guild,GuildMember, PermissionFlagsBits, PermissionsBitField } from 'discord.js';
 import checkPermissions from '../Utils/checkPermissions';
 import rank from "./rank"
 import { syncBuiltinESMExports } from 'module';
@@ -35,10 +35,26 @@ const displayRank = async (interaction: ChatInputCommandInteraction): Promise<bo
 
     let members = getCollections().members
     let res:any = await members.findOne({memId:interaction.user.id})
+
+    if(!interaction.guild?.members.me?.permissions.has(PermissionFlagsBits.ManageNicknames)){
+        interaction.editReply({content: '*bot does not have permissions to change nicknames*'});
+        return false;
+    }
     if (!res){
         rank(interaction)
         res = await members.findOne({memId:interaction.user.id})
     }
+    if (interaction.guild?.members.me?.roles.highest.position<=(interaction.member as GuildMember).roles.highest.position){
+        interaction.editReply({content: '*bot does not have permissions to change nicknames because its role is not higher than yours*'});
+        return false;
+
+    }
+    if (interaction.user.id==interaction.guild.ownerId){
+        interaction.editReply({content: '*bot does not have permissions to change nicknames of server owner*'});
+        return false;
+
+    }
+
 
     //in-game name
     const ign = interaction.options.getString("in-game-name");
