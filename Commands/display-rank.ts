@@ -36,24 +36,11 @@ const displayRank = async (interaction: ChatInputCommandInteraction): Promise<bo
     let members = getCollections().members
     let res:any = await members.findOne({memId:interaction.user.id})
 
-    if(!interaction.guild?.members.me?.permissions.has(PermissionFlagsBits.ManageNicknames)){
-        interaction.editReply({content: '*bot does not have permissions to change nicknames*'});
-        return false;
-    }
     if (!res){
         rank(interaction)
         res = await members.findOne({memId:interaction.user.id})
     }
-    if (interaction.guild?.members.me?.roles.highest.position<=(interaction.member as GuildMember).roles.highest.position){
-        interaction.editReply({content: '*bot does not have permissions to change nicknames because its role is not higher than yours*'});
-        return false;
 
-    }
-    if (interaction.user.id==interaction.guild.ownerId){
-        interaction.editReply({content: '*bot does not have permissions to change nicknames of server owner*'});
-        return false;
-
-    }
 
 
     //in-game name
@@ -89,6 +76,23 @@ const displayRank = async (interaction: ChatInputCommandInteraction): Promise<bo
 
         newName = "["+res.short+roleSymb+"]"+ign
         
+    }
+    if(!interaction.guild?.members.me?.permissions.has(PermissionFlagsBits.ManageNicknames)){
+        interaction.editReply({content: '*bot does not have permissions to change nicknames*'});
+        interaction.followUp({content:"here is your new nickname if you want to change it yourself: "+newName})
+        return false;
+    }
+    if (interaction.guild?.members.me?.roles.highest.position<=(interaction.member as GuildMember).roles.highest.position){
+        interaction.editReply({content: '*bot does not have permissions to change nicknames because its role is not higher than yours*'});
+        interaction.followUp({content:"here is your new nickname if you want to change it yourself: "+newName})
+        return false;
+
+    }
+    if (interaction.user.id==interaction.guild.ownerId){
+        interaction.editReply({content: '*bot does not have permissions to change nicknames of server owner*'});
+        interaction.followUp({content:"here is your new nickname if you want to change it yourself: "+newName})
+        return false;
+
     }
 
     await (interaction.member as GuildMember).setNickname(newName)
