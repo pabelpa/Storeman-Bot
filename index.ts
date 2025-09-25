@@ -60,11 +60,14 @@ import {categories} from "./Utils/createStockpileEmbed"
 import { arrayBuffer } from "stream/consumers";
 import createForumChannel from "./Commands/create-channels"
 import setBotChannelCat from "./Commands/set-bot-channel-cat"
+import setRankRoles from "./Commands/set-rank-roles";
+import rank from "./Commands/rank";
+import displayRank from "./Commands/display-rank";
 
 
 require("dotenv").config();
 const host = process.env.APP_HOST ? process.env.APP_HOST : "0.0.0.0";
-const currentVersion = 27;
+const currentVersion = 28;
 const commandMapping: any = {
   sphelp: { sub: false, vars: 1, handler: sphelp },
   spcode: {
@@ -140,6 +143,9 @@ const commandMapping: any = {
   'lb-complete': { sub: false, vars: 1, handler: lbComplete },
   'create-forum-channel': { sub: false, vars: 1, handler: createForumChannel },
   'set-bot-channel-cat': { sub: false, vars: 1, handler: setBotChannelCat },
+  'set-rank-roles': { sub: false, vars: 1, handler:  setRankRoles},
+  'rank': { sub: false, vars: 1, handler: rank },
+  'display-rank': { sub: false, vars: 1, handler: displayRank },
 };
 const timerBP = [60 * 5, 60 * 10, 60 * 30, 60 * 60, 60 * 60 * 6, 60 * 60 * 12]; // Timer breakpoints in seconds
 

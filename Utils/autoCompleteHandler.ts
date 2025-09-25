@@ -81,6 +81,54 @@ const deliverAC = async (interaction: AutocompleteInteraction, collections: any)
     }
 }
 
+const rankRoleAC = async (interaction: AutocompleteInteraction, collections: any) => {
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+    const ranks = [
+        "enlisted",
+        "nco",
+        "warrant",
+        "officer",
+        "commander",
+        "chief",
+        "eng1",
+        "eng2",
+        "eng3",
+        "eng4",
+        "fac1",
+        "fac2",
+        "fac3",
+        "fac4",
+        "logi1",
+        "logi2",
+        "logi3",
+        "logi4",
+        "logi5",
+        "arty2",
+        "arty3",
+        "armor2",
+        "armor3",
+        "comb1",
+        "comb2",
+        "comb3",
+        "comb4",
+        "comb5",
+    ]
+    if (ranks){
+
+        const filtered: Array<ApplicationCommandOptionChoiceData> = []
+        for (let i = 0; i < ranks.length; i++) {
+            if (ranks[i].toLowerCase().indexOf(focusedValue) !== -1) {
+                filtered.push({ name: ranks[i], value: ranks[i] })
+            }
+            
+            if (filtered.length >= 25) break
+        }
+        await interaction.respond(filtered);
+    } else {
+        await interaction.respond([])
+    }
+}
+
 const spGroupComplete = async (interaction: AutocompleteInteraction, collections: any) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();
 
@@ -112,7 +160,8 @@ const commands: any = {
     'spsetmsupp':{'name': spFacComplete,},
     'spmsuppcons':{'name': spFacComplete,},
     'spremovefac':{'name': spFacComplete,},
-    'deliver':{'resource': deliverAC,}
+    'deliver':{'resource': deliverAC,},
+    'set-rank-roles':{'rank': rankRoleAC,}
 
 }
 

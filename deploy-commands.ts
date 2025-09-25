@@ -311,6 +311,13 @@ const commands = [
         .addStringOption((option) => option.setName("channel-name").setDescription("name of channel").setRequired(true)),
     new SlashCommandBuilder().setName('set-bot-channel-cat').setDescription('designates a channel category for bot things')
         .addChannelOption((option) => option.setName("channel-category").setDescription("name of channel category").setRequired(true)),
+    new SlashCommandBuilder().setName('set-rank-roles').setDescription('Associates a role with a rank the bot recognizes')
+        .addRoleOption((option) => option.setName("role").setDescription("role name").setRequired(true))
+        .addStringOption((option) => option.setName("rank").setDescription("rank name").setRequired(true).setAutocomplete(true)),
+    new SlashCommandBuilder().setName('rank').setDescription('gives you information on your rank'),
+    new SlashCommandBuilder().setName('display-rank').setDescription('controls whether your rank is visible in your name')
+        .addBooleanOption((option) => option.setName("show").setDescription("show or hide").setRequired(true))
+        .addStringOption((option) => option.setName("in-game-name").setDescription("save your in-game name to properly construct rank").setRequired(true)),
 
 ].map(command => command.toJSON())
 

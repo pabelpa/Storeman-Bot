@@ -55,28 +55,19 @@ const getMongoClientObj = (): MongoClient => {
 }
 
 const getCollections = (serverID?: any) => {
-    if (process.env.STOCKPILER_MULTI_SERVER && process.env.STOCKPILER_MULTI_SERVER === "true") {
-        const db:Db = mongoClientObj.db('stockpiler-' + serverID)
-        const collections = {
-            stockpiles: db.collection('stockpiles'),
-            targets: db.collection('targets'),
-            config: db.collection('config'),
-            facilities:db.collection('facilities'),
-            tickets:db.collection<Ticket>('tickets')
-        }
-        return collections
+
+
+    const db:Db = mongoClientObj.db('stockpiler')
+    const collections = {
+        stockpiles: db.collection('stockpiles'),
+        targets: db.collection('targets'),
+        config: db.collection('config'),
+        facilities:db.collection('facilities'),
+        tickets:db.collection<Ticket>('tickets'),
+        members:db.collection('members')
     }
-    else {
-        const db:Db = mongoClientObj.db('stockpiler')
-        const collections = {
-            stockpiles: db.collection('stockpiles'),
-            targets: db.collection('targets'),
-            config: db.collection('config'),
-            facilities:db.collection('facilities'),
-            tickets:db.collection<Ticket>('tickets')
-        }
-        return collections
-    } 
+    return collections
+    
 
 }
 
