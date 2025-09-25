@@ -101,7 +101,7 @@ const lbComplete = async (interaction: ChatInputCommandInteraction): Promise<boo
     })
 
 
-    interaction.editReply({content: "Logistics ticket published to <#" + config.availableTicketChannel || interaction.channelId + "> and accessible in <#" + t.channelId + ">"})
+    interaction.editReply({content: "Logistics ticket published to <#" + config.availableTicketChannel + "> and accessible in <#" + t.channelId + ">"})
     return true
 }
 export default lbComplete

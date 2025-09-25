@@ -9,7 +9,8 @@ const  recordLogiTicket = async (msg:Message)=>{
     })
 
     if (q){
-        await getCollections().tickets.updateOne({},
+        console.log(msg.content)
+        await getCollections().tickets.updateOne({_id:q._id},
             {
             $push: {transcript: msg.author.username + " (" + msg.createdAt.toTimeString() + "): " + msg.content}
         })

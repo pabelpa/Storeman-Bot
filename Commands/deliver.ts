@@ -1,5 +1,5 @@
 import { getCollections } from '../mongoDB'
-import { ChatInputCommandInteraction, ChannelType, ForumChannel,ThreadAutoArchiveDuration } from 'discord.js';
+import { ChatInputCommandInteraction, ChannelType, ForumChannel,ThreadAutoArchiveDuration, Guild } from 'discord.js';
 import createOracleEmbed from '../Utils/createOracleEmbed';
 const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolean> => {
     let Ticket = getCollections().tickets
@@ -68,7 +68,7 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
         const q = interaction.client.channels.cache.get(t.channelId);
 
         if (q && q.type == ChannelType.GuildText){
-
+            q.send({content:"Automatically resolving issue, all demands met"})
             const logiChannelEmbed = createOracleEmbed('Logistics Ticket [COMPLETE] (' + t.location + ") - " + t.ticketId , "**Logistics order complete**, all resources have been delivered to the appropriate location", 
                 t.logisticsTypes?.map((v, i) => {
                     if (!t || !t.demanded || !t.delivered) return {name: "A", value: "A"};
@@ -84,6 +84,7 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
             // delete old thread
             let channelObj = await interaction.client.channels.fetch(config.availableTicketChannel)
             let oldThread = await (channelObj as ForumChannel).threads?.fetch(t.thread)
+
             oldThread?.delete()
             
             // create archive thread
@@ -127,16 +128,17 @@ const deliver = async (interaction: ChatInputCommandInteraction): Promise<boolea
     
     
 
+    let channel  = interaction.channel
     if (!fulfilled){
-        let channel  = interaction.channel
 
         await channel.messages.fetch(t.updateEmbed).then(msg => (msg as any).edit({embeds: [ticketChannelEmbed]}));
-            
-        interaction.followUp({content: "**Logged delivery of " + interaction.options.getInteger("amount") + " " + interaction.options.getString("resource") + (interaction.options.getString("resource")?.endsWith("s") ? "" : "s") + " to " + t.location +" by <@" + (interaction.user.id) + ">**"})
-
-    }else{
-        interaction.followUp({content:"Automatically resolving issue, all demands met"})
-    }   
+        let logMsg = "**Logged delivery of " + interaction.options.getInteger("amount") + " " + interaction.options.getString("resource") + (interaction.options.getString("resource")?.endsWith("s") ? "" : "s") + " to " + t.location +" by <@" + (interaction.user.id) + ">**"
+        channel.send({content: logMsg})
+        await getCollections().tickets.updateOne({_id:t._id},
+        {
+            $push: {transcript: " (" + interaction.createdAt.toTimeString() + "): " + logMsg}
+        })
+    }
     return true
 }
 export default deliver
