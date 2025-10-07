@@ -74,7 +74,7 @@ const displayRank = async (interaction: ChatInputCommandInteraction): Promise<bo
             }
         }
 
-        newName = "["+res.short+roleSymb+"]"+ign
+        newName = ign+"["+res.short+roleSymb+"]"
         
     }
     if(!interaction.guild?.members.me?.permissions.has(PermissionFlagsBits.ManageNicknames)){
