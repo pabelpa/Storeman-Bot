@@ -186,4 +186,4 @@ const rank = async (interaction: ChatInputCommandInteraction): Promise<boolean> 
     return true
 }
 
-export default rank
+export {rank,ranks}

@@ -1,7 +1,7 @@
 import { getCollections } from '../mongoDB'
 import { ChatInputCommandInteraction,Guild,GuildMember, PermissionFlagsBits, PermissionsBitField } from 'discord.js';
 import checkPermissions from '../Utils/checkPermissions';
-import rank from "./rank"
+import {rank} from "./rank"
 import { syncBuiltinESMExports } from 'module';
 
 const roles:any = {
