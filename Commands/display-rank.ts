@@ -37,7 +37,7 @@ const displayRank = async (interaction: ChatInputCommandInteraction): Promise<bo
     let res:any = await members.findOne({memId:interaction.user.id})
 
     if (!res){
-        rank(interaction)
+        await rank(interaction)
         res = await members.findOne({memId:interaction.user.id})
     }
 
