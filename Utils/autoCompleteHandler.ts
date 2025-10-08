@@ -129,6 +129,29 @@ const rankRoleAC = async (interaction: AutocompleteInteraction, collections: any
     }
 }
 
+const xpTypeAC = async (interaction: AutocompleteInteraction, collections: any) => {
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+    const xpTypes = [
+        "combat",
+        "logi",
+        "engineering"
+    ]
+    if (xpTypes){
+
+        const filtered: Array<ApplicationCommandOptionChoiceData> = []
+        for (let i = 0; i < xpTypes.length; i++) {
+            if (xpTypes[i].toLowerCase().indexOf(focusedValue) !== -1) {
+                filtered.push({ name: xpTypes[i], value: xpTypes[i] })
+            }
+            
+            if (filtered.length >= 25) break
+        }
+        await interaction.respond(filtered);
+    } else {
+        await interaction.respond([])
+    }
+}
+
 const spGroupComplete = async (interaction: AutocompleteInteraction, collections: any) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();
 
@@ -161,7 +184,8 @@ const commands: any = {
     'spmsuppcons':{'name': spFacComplete,},
     'spremovefac':{'name': spFacComplete,},
     'deliver':{'resource': deliverAC,},
-    'set-rank-roles':{'rank': rankRoleAC,}
+    'set-rank-roles':{'rank': rankRoleAC,},
+    'give-xp':{'type': xpTypeAC,}
 
 }
 

@@ -314,10 +314,15 @@ const commands = [
     new SlashCommandBuilder().setName('set-rank-roles').setDescription('Associates a role with a rank the bot recognizes')
         .addRoleOption((option) => option.setName("role").setDescription("role name").setRequired(true))
         .addStringOption((option) => option.setName("rank").setDescription("rank name").setRequired(true).setAutocomplete(true)),
-    new SlashCommandBuilder().setName('rank').setDescription('gives you information on your rank'),
+    new SlashCommandBuilder().setName('rank').setDescription('gives you information on your rank')
+        .addUserOption((option) => option.setName("soldier").setDescription("who's rank do you want to see if not your own?").setRequired(false)),
     new SlashCommandBuilder().setName('display-rank').setDescription('controls whether your rank is visible in your name')
         .addBooleanOption((option) => option.setName("show").setDescription("show or hide").setRequired(true))
         .addStringOption((option) => option.setName("in-game-name").setDescription("save your in-game name to properly construct rank").setRequired(true)),
+    new SlashCommandBuilder().setName('give-xp').setDescription('gives experience to your subordinates')
+        .addUserOption((option) => option.setName("soldier").setDescription("who are you giving xp to?").setRequired(true))
+        .addNumberOption((option) => option.setName("xp").setDescription("amount of xp").setRequired(true))
+        .addStringOption((option) => option.setName("type").setDescription("combat, logi, or engineering XP").setRequired(true).setAutocomplete(true)),
 
 ].map(command => command.toJSON())
 
