@@ -168,6 +168,12 @@ const chiefRank:any = [
         xp:1000000,
         xpCapacity:1000
     },
+    {
+        name: "Colonel",
+        short: "COL",
+        xp: 2000000,
+        xpCapacity: 2000
+    },
 ]
 
 const ranks:any = {
@@ -226,7 +232,12 @@ const rank = async (interaction: ChatInputCommandInteraction): Promise<boolean> 
     if(res.xpCapacity==undefined){
         collections.members.updateOne({_id:res._id},{$set:{xpCapacity:ranklist[res.rankIndex].xpCapacity}})
     }
-    let xpNextRank = ranklist[res.rankIndex+1].xp-Math.max(res.logiXp,res.combatXp,res.engineeringXp)
+    let xpNextRank
+    if (ranklist[res.rankIndex+1]){
+        xpNextRank = ranklist[res.rankIndex+1].xp-Math.max(res.logiXp,res.combatXp,res.engineeringXp)
+    } else {
+        xpNextRank = 0
+    }
         interaction.editReply(
             {
                 content:`${soldier.displayName} \n\n# Rank: \`${res.rank}\` \n\n- Combat xp: ${res.combatXp} \n- Logistics xp: ${res.logiXp} \n- Engineering xp: ${res.engineeringXp} \n- xp until next rank: ${xpNextRank}`
