@@ -462,7 +462,7 @@ const main = async (): Promise<void> => {
   // Connect to mongoDB
   if (await open()) {
     setInterval(checkTimeNotifs, 1000 * 60, client, false, true);
-    setInterval(resetXp, 1000 * 60);
+    setInterval(resetXp, 1000 * 60*60*24);
 
     // Start HTTP server
     const server = http.createServer((request, response) => {
